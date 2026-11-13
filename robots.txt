@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://monoline.si/sitemap.xml
