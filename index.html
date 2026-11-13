@@ -211,37 +211,31 @@ const LAMP_PRESETS = {
   // ── finished pieces ──
   lantern:{ studio:true, name:'Lantern', note:'Net that swells open · knurled foot', lamp:{ layout:'bell', fitting:'e27', bulb:'a60', watts:6 },
     shade:part(1.7, prof(v => (22.2 + 58 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.4, holeH:2.4, holeH2:5.6, grad:'swell', rim:8 }),
-    base: part(.6, prof(v => .48 - .2 * Math.pow(v, 1.4)), pat('knurl', .0035, 44, 16, .22), pat('smooth', 0, 40, 20), '#2f4fb5') },
+    base: part(.6, prof(v => .6 - .3 * Math.pow(v, 1.2)), pat('knurl', .0035, 52, 16, .22), pat('smooth', 0, 40, 20), '#2f4fb5') },
   ember:{ studio:true, name:'Ember', note:'Bedside · bumps melt into smooth', lamp:{ layout:'bell', fitting:'e14', bulb:'p45', watts:4 },
     shade:part(1.1, prof(v => (15.8 + 50 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('knurl', .0035, 60, 30, .18), pat('smooth', 0, 40, 20), '#ef7d5a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.68, soft:.16 }),
-    base: part(.7, prof(v => .36 - .12 * v), pat('rings', .004, 40, 16), pat('smooth', 0, 40, 20), '#a9d6b8') },
+    base: part(.6, prof(v => .54 - .3 * Math.pow(v, 1.3)), pat('rings', .004, 40, 14), pat('smooth', 0, 40, 20), '#a9d6b8') },
   sash:{ studio:true, name:'Sash', note:'Pendant · a knurled ribbon winds through ribs', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
     shade:part(1.9, prof(v => (22.2 + 94 * Math.pow(1 - v, .74)) / MM), pat('ribs', .005, 72, 20, .2), pat('knurl', .0035, 72, 44, .2), '#c96a3b', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }),
     base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#c96a3b') },
   globe:{ name:'Globe', note:'E27 bulb, shade on socket ring', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
     shade:part(1.6, prof(v => { const z = v * 160; return Math.min(22.2 + z * .95, 75, 35 + (160 - z) * .95) / MM; }), pat('rings', .004, 40, 24), pat('woven', .004, 40, 24), '#f2efe8'),
-    base: part(.55, prof(v => .42 - .14 * v), pat('ribs', .01, 48, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
+    base: part(.55, prof(v => .58 - .28 * v), pat('ribs', .01, 56, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
   pendant:{ name:'Pendant', note:'E27, hangs from the cord', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95' },
     shade:part(1.7, prof(v => Math.min(22.2 + (1 - v) * 170 * .95, 118) / MM), pat('ribs', .008, 64, 20), pat('woven', .005, 40, 16), '#efe9df'),
     base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#efe9df') },
   net:{ name:'Net', note:'Up/down holes, E27 bulb', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
     shade:part(1.5, prof(v => { const z = v * 150; return Math.min(22.2 + z * .95, 72, 40 + (150 - z) * .7) / MM; }), pat('smooth', 0, 40, 20), pat('ribs', .006, 48, 20), '#f2efe8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.4, holeH:5, holeH2:8, rim:6 }),
-    base: part(.55, prof(v => .42 - .14 * v), pat('ribs', .01, 48, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
-  mesh:{ name:'Mesh', note:'Open lattice shade', lamp:{ layout:'dome', fitting:'led', bulb:'led' },
-    shade:part(.62, prof(v => .22 + .68 * Math.pow(Math.sin((1 - v) * Math.PI / 2 + .12), 1.3)), pat('smooth', 0, 40, 20), pat('ribs', .006, 48, 20), '#f2efe8', 0, 0, {}, {}, { on:true, amp:1.6, lobes:40, rings:1, bumps:2, rim:5 }),
-    base: part(.95, prof(v => .2 + .1 * Math.pow(1 - v, 1.6)), pat('ribs', .008, 40, 20), pat('rings', .005, 40, 14), '#f2efe8') },
-  mushroom:{ name:'Mushroom', note:'Dome shade, fluted foot', lamp:{ layout:'dome', fitting:'led', bulb:'led' },
-    shade:part(.72, prof(v => .26 + .76 * Math.pow(Math.cos(v * Math.PI / 2), .7)), pat('woven', .005, 40, 16), pat('ribs', .008, 60, 16), '#ece3d6'),
-    base: part(1.0, prof(v => .2 + .29 * Math.pow(1 - v, 2.3)), pat('ribs', .012, 48, 20), pat('rings', .005, 40, 14), '#3b2622') },
-  cone:{ name:'Cone', note:'Tapered shade, ribbed column',
-    shade:part(.66, prof(v => .16 + .62 * (1 - v)), pat('rings', .005, 40, 16), pat('woven', .005, 40, 16), '#efe6d8'),
-    base: part(.92, prof(v => .27 - .06 * v), pat('ribs', .01, 56, 20), pat('diamond', .005, 28, 14), '#ddd3c4') },
-  saucer:{ name:'Saucer', note:'Wide disc, slim stem',
-    shade:part(.5, prof(v => .26 + .7 * Math.pow(Math.sin(Math.min(1, (1 - v) * 1.25) * Math.PI / 2), .8) + .08 * Math.sin(v * Math.PI)), pat('woven', .005, 56, 12), pat('ribs', .008, 64, 12), '#e9dfd0'),
-    base: part(1.08, prof(v => .17 + .2 * Math.pow(1 - v, 3)), pat('ribs', .01, 36, 20, .15), pat('rings', .005, 40, 16), '#2f2420') },
-  hive:{ name:'Hive', note:'Coiled bell, petal foot',
-    shade:part(.86, prof(v => .24 + .6 * Math.pow(Math.max(0, 1 - v * v), .6)), pat('rings', .007, 40, 14), pat('woven', .005, 40, 14), '#f0d9b5'),
-    base: part(.86, prof(v => .2 + .14 * Math.cos(v * Math.PI) ** 2), pat('diamond', .005, 20, 12), pat('ribs', .01, 40, 12), '#5a3b2c', 6, .06) },
+    base: part(.55, prof(v => .58 - .28 * v), pat('ribs', .01, 56, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
+  mesh:{ name:'Mesh pendant', note:'Open lattice dome, E27', lamp:{ layout:'pendant', fitting:'e27', bulb:'a60' },
+    shade:part(1.5, prof(v => (22.2 + 86 * Math.sin((1 - v) * Math.PI / 2)) / MM), pat('smooth', 0, 40, 20), pat('ribs', .006, 48, 20), '#f2efe8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.6, lobes:40, rings:1, bumps:2, rim:5 }),
+    base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#f2efe8') },
+  mushroom:{ name:'Mushroom', note:'Low cap on a fluted foot, E27', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
+    shade:part(1.25, prof(v => (22.2 + 66 * Math.sin(Math.PI * .8 * Math.pow(v, .55))) / MM), pat('woven', .005, 40, 16), pat('ribs', .008, 60, 16), '#ece3d6'),
+    base: part(.7, prof(v => .28 + .34 * Math.pow(1 - v, 1.8)), pat('ribs', .012, 48, 20), pat('rings', .005, 40, 14), '#3b2622') },
+  cone:{ name:'Cone', note:'Flared uplight shade, E27', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
+    shade:part(1.3, prof(v => (22.2 + 72 * Math.pow(v, .7)) / MM), pat('rings', .005, 40, 16), pat('woven', .005, 40, 16), '#efe6d8'),
+    base: part(.6, prof(v => .62 - .32 * v), pat('ribs', .01, 64, 20), pat('diamond', .005, 28, 14), '#ddd3c4') },
 };
 const VESSEL_PRESETS = {
   // ── finished pieces ──
@@ -268,6 +262,14 @@ const VESSEL_PRESETS = {
   pot:{ name:'Petal pot', note:'Lobed tumbler',
     vessel:part(.95, prof(v => .33 - .05 * v + .02 * smooth(.9, 1, v)), pat('ribs', .01, 56, 20), pat('diamond', .005, 28, 16), '#b88a6a', 8, .05) },
 };
+// make a shade's opening fit the socket's shade ring (bottom opening for table lamps, top opening for pendants)
+function fitProf(P, layout, fitting, w = .45, deg = 45) {
+  const F = FITTINGS[fitting] || FITTINGS.e27, target = (F.hole / 2 + w / 2) / MM, a = layout === 'bell' ? 0 : N - 1, dir = a ? -1 : 1;
+  const maxD = Math.tan(deg * Math.PI / 180) * (P.h / (N - 1)), pr = P.prof;
+  pr[a] = +target.toFixed(4);
+  // walk away from the opening, never steeper than a printable overhang, until the wall meets the designed form
+  for (let i = a + dir; i >= 0 && i < N; i += dir) { const lim = Math.min(Math.max(pr[i], pr[i - dir] - maxD), pr[i - dir] + maxD); if (lim === pr[i]) break; pr[i] = +lim.toFixed(4); }
+}
 // keep every preset inside a printable overhang for vase mode
 function easeSlope(P, deg = 45) {
   const maxD = Math.tan(deg * Math.PI / 180) * (P.h / (N - 1)), pr = P.prof; let iMax = 0; pr.forEach((r, i) => { if (r > pr[iMax]) iMax = i; });
@@ -305,9 +307,12 @@ const BULBS = {
   c35:{ fit:'e14', name:'C35 candle', d:35, h:100, mass:20 },
   p45:{ fit:'e14', name:'P45 ball', d:45, h:80, mass:25 },
 };
-const LAYOUTS = { dome:'Dome over an LED module', bell:'Shade on a socket ring', pendant:'Pendant' };
+const LAYOUTS = { bell:'Table lamp · shade clamps on the socket', pendant:'Pendant · shade hangs from the socket' };
+const ringH = F => (F.h - 18) / MM;   // height of the socket's shade ring above its foot (scene units)
+const PLATE_HOLE = 10.5;             // mm, hole in the base's top plate for an M10 threaded nipple
 const PEND_Y = .55;
-const LAMP0 = () => ({ layout:'dome', fitting:'led', bulb:'led', watts:6, hw:true });
+const LAMP0 = () => ({ layout:'bell', fitting:'e27', bulb:'a60', watts:6, hw:true });
+for (const p of Object.values(LAMP_PRESETS)) { fitProf(p.shade, p.lamp.layout, p.lamp.fitting); easeSlope(p.shade, 44); }   // every lamp's opening fits its socket
 const lineW = n => +(n * 1.12).toFixed(2);
 
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -522,13 +527,13 @@ function resFor(P) {
   const segs = amp ? Math.min(Math.max(Math.round(Math.max(P.freq, P.b.freq) * 10), 180), 560) : Math.max(160, P.lobes * 24);
   return { rings, segs };
 }
-const partY0 = k => k !== 'shade' ? 0 : state.lamp.layout === 'pendant' ? PEND_Y : state.lamp.layout === 'bell' ? state.base.h + .006 : state.base.h + COLLAR_H - state.shade.h;
+const partY0 = k => k !== 'shade' ? 0 : state.lamp.layout === 'pendant' ? PEND_Y : state.lamp.layout === 'bell' ? state.base.h + ringH(FITTINGS[state.lamp.fitting] || FITTINGS.e27) : state.base.h + COLLAR_H - state.shade.h;
 const lampTop = () => state.lamp.layout === 'dome' ? state.base.h + COLLAR_H : partY0('shade') + state.shade.h;
 
 function buildPart(k, geom, closed = false) {
   const P = state[k], y0 = closed ? 0 : partY0(k), m = getMask(k);
   const { rings, segs } = resFor(P);
-  const capB = closed || k !== 'shade', capT = closed;
+  const capB = closed || k === 'vessel', capT = closed || k === 'base';
   const vCount = (rings + 1) * segs + (capB ? segs + 1 : 0) + (capT ? segs + 1 : 0);
   const triCount = rings * segs * 2 + (capB ? segs : 0) + (capT ? segs : 0);
   let pos, glow, pm;
@@ -631,11 +636,11 @@ function buildPrinted(k, geom) {
     idx[t++] = M(j); idx[t++] = T(j); idx[t++] = M(j + 1); idx[t++] = M(j + 1); idx[t++] = T(j); idx[t++] = T(j + 1);
     if (j + segs + 1 <= steps && (!zw || (ZC[j + segs] - ZC[j] < lh * 1.15 && ZC[j + segs + 1] - ZC[j + 1] < lh * 1.15))) { const u = j + segs; idx[t++] = T(j); idx[t++] = B(u); idx[t++] = T(j + 1); idx[t++] = T(j + 1); idx[t++] = B(u); idx[t++] = B(u + 1); }
   }
-  if (cap) { // solid bottom
-    const o = (steps + 1) * 3;
-    for (let i = 0; i < segs; i++) { const th = i / segs * TAU; pos[(o + i) * 3] = (R[i] - inset) * Math.cos(th); pos[(o + i) * 3 + 1] = y0; pos[(o + i) * 3 + 2] = (R[i] - inset) * Math.sin(th); nor[(o + i) * 3 + 1] = -1; }
-    pos[(o + segs) * 3 + 1] = y0; nor[(o + segs) * 3 + 1] = -1;
-    for (let i = 0; i < segs; i++) { idx[t++] = o + segs; idx[t++] = o + i; idx[t++] = o + (i + 1) % segs; }
+  if (cap) { // solid bottom (vessel) or solid top plate (lamp base, printed upside down)
+    const o = (steps + 1) * 3, top = k === 'base', off = top ? steps - segs : 0, yc = top ? y0 + ZC[steps] + lh / 2 : y0;
+    for (let i = 0; i < segs; i++) { const th = i / segs * TAU; pos[(o + i) * 3] = (R[off + i] - inset) * Math.cos(th); pos[(o + i) * 3 + 1] = yc; pos[(o + i) * 3 + 2] = (R[off + i] - inset) * Math.sin(th); }
+    pos[(o + segs) * 3 + 1] = yc;
+    for (let i = 0; i < segs; i++) { idx[t++] = o + segs; idx[t++] = top ? o + (i + 1) % segs : o + i; idx[t++] = top ? o + i : o + (i + 1) % segs; }
   }
   geom?.dispose(); geom = new THREE.BufferGeometry();
   geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -803,9 +808,8 @@ function rebuild(which = 'all', keepPath = false) {
   if (lamp) {
     const F = FITTINGS[state.lamp.fitting];
     let rTop = lay === 'dome' ? Math.max(sampleProf(state.base.prof, 1), sampleProf(state.shade.prof, 1)) + .015 : F.flange / 2 / MM;
-    if (lay === 'bell') rTop = Math.max(rTop, sampleProf(state.base.prof, 1) + .005);
     collarMesh.geometry?.dispose(); collarMesh.geometry = new THREE.CylinderGeometry(rTop, rTop, lay === 'dome' ? COLLAR_H : .006, 72);
-    collarMesh.position.y = lay === 'pendant' ? lampTop() + .006 : lay === 'bell' ? state.base.h + .003 : state.base.h + COLLAR_H / 2;
+    collarMesh.position.y = lay === 'pendant' ? lampTop() + .006 : lay === 'bell' ? partY0('shade') + .005 : state.base.h + COLLAR_H / 2;
   }
   for (const k of parts()) if (state.view === 'path' && isZW(state[k])) meshes[k].visible = false; // a net is mostly air: show just the line
   drawHardware();
@@ -991,7 +995,7 @@ stage.addEventListener('pointerleave', () => { if (!drag) showBrush(null); });
 function toolpath(k) {
   const pr = state.print, P = state[k], m = getMask(k);
   const lh = pr.layerH, w = lineW(pr.nozzle), H = P.h * MM;
-  const flip = k === 'shade' && pr.orient === 'top';
+  const flip = (k === 'shade' && pr.orient === 'top') || k === 'base';   // the base prints upside down: its top plate goes on the bed
   const vOf = z => { const v = Math.min(1, Math.max(0, z / H)); return flip ? 1 - v : v; };
   const R = (th, z) => surfR(P, flip ? -th : th, vOf(z), m) * MM - w / 2; // nozzle centre sits half a line inside the surface
   const fil = FILAMENTS[pr.filament];
@@ -1018,7 +1022,7 @@ function toolpath(k) {
     while (true) {
       const off = ring * w * .96; let minR = Infinity; const pts = [];
       for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, zc) - off; minR = Math.min(minR, r); pts.push([r * Math.cos(th), r * Math.sin(th)]); }
-      if (minR < w * .55) break;
+      if (minR < (k === 'base' ? PLATE_HOLE / 2 + w * .5 : w * .55)) break;   // leave the nipple hole open in the base plate
       pts.forEach((q, i) => push(q[0], q[1], z, first && i === 0 ? 1 : 0, feed));
       first = false; ring++;
     }
@@ -1146,7 +1150,7 @@ function checks(k) {
   }
   if (P.mod.src === 'attract' && !P.mod.attrs.length) add('warn', 'Attractor source chosen but no points placed yet — tap the surface with the Attractor tool.');
   if (k === 'shade') { const rTop = sampleProf(P.prof, 1) * MM - w; add('ok', `Top opening is about Ø${(rTop * 2).toFixed(0)} mm inside — check your lamp socket fits.`); }
-  if (k === 'base') add('ok', 'Base prints closed at the bottom — drill a cable hole or add a slot afterwards.');
+  if (k === 'base') add('ok', `Base prints upside down: its solid top plate (with a Ø${PLATE_HOLE} mm hole for an M10 nipple) goes on the bed. The bottom stays open for the cord.`);
   return out;
 }
 const texName = t => ({ smooth:'Smooth', woven:'Woven', ribs:'Ribs', rings:'Coil', diamond:'Lattice', wave:'Wave', knurl:'Knurl' })[t] || t;
@@ -1237,7 +1241,7 @@ function hardware() {
   const lay = state.lamp.layout, F = FITTINGS[state.lamp.fitting], B = BULBS[state.lamp.bulb], u = 1 / MM;
   if (lay === 'dome') { const y = state.base.h - F.h * u; return { sock:{ r:F.d / 2 * u, h:F.h * u, y }, bulb:null, light:{ y:y, r:0 }, F, B }; }
   if (lay === 'bell') {
-    const top = state.base.h + .006, sy = top - F.h * .7 * u;
+    const sy = state.base.h;   // socket stands on the base's top plate, fixed with an M10 nipple
     const y0 = sy + F.h * u - 4 * u;
     return { sock:{ r:F.d / 2 * u, h:F.h * u, y:sy }, bulb:{ ...B, y0, dir:1, h:B.h * u, d:B.d * u, neck:F.neck * u }, light:{ y:y0 + (B.h - B.d / 2) * u, r:0 }, F, B };
   }
@@ -1255,12 +1259,19 @@ function partMass(k) { // grams and centre-of-mass height (mm, world), from the 
   const P = state[k], fil = FILAMENTS[state.print.filament], w = lineW(state.print.nozzle), y0 = partY0(k) * MM, H = P.h * MM;
   let m = 0, my = 0; const n = 60;
   for (let j = 0; j < n; j++) { const v = (j + .5) / n, r = sampleProf(P.prof, v) * MM, dm = TAU * r * (H / n) * w * fil.rho * 1e-3; m += dm; my += dm * (y0 + v * H); }
-  if (k !== 'shade') { const r0 = sampleProf(P.prof, 0) * MM, dm = Math.PI * r0 * r0 * Math.max(1, state.print.bottom) * state.print.layerH * fil.rho * 1e-3; m += dm; my += dm * y0; }
+  if (k !== 'shade') { const r0 = sampleProf(P.prof, 0) * MM, dm = Math.PI * r0 * r0 * Math.max(1, state.print.bottom) * state.print.layerH * fil.rho * 1e-3; m += dm; my += dm * (k === 'base' ? y0 + H : y0); }
   return { m, y:my / m };
 }
 function lampChecks() {
   const out = [], add = (lvl, msg) => out.push({ lvl, msg }); const H = hardware(); if (!H) return out;
   const L = state.lamp, lay = L.layout, fil = FILAMENTS[state.print.filament], u = MM;
+  { // attachment: the shade opening must fit under the socket's shade ring; the base plate must carry the socket
+    const w = lineW(state.print.nozzle), v0 = lay === 'bell' ? 0 : 1, din = (sampleProf(state.shade.prof, v0) * u - w) * 2;
+    const okFit = din >= H.F.d + .5 && din <= H.F.flange - 5;
+    add(okFit ? 'ok' : 'bad', okFit ? `Attaches: the shade's ${lay === 'bell' ? 'bottom' : 'top'} opening (Ø${din.toFixed(0)} mm) slips over the ${H.F.name} thread and is clamped by its shade ring.`
+      : `Can't attach: the shade's ${lay === 'bell' ? 'bottom' : 'top'} opening is Ø${din.toFixed(0)} mm, but the ${H.F.name} shade ring needs Ø${H.F.hole} mm. Use “Fit shade opening”.`);
+    if (lay === 'bell') { const dt = sampleProf(state.base.prof, 1) * u * 2; add(dt < 30 ? 'bad' : 'ok', dt < 30 ? `Base top is only Ø${dt.toFixed(0)} mm — too small for the socket and its nut (needs ≥ 30 mm).` : `Socket mounts on the base's top plate (Ø${dt.toFixed(0)} mm) with an M10 nipple and nut.`); }
+  }
   // clearance between bulb (or LED module) and the inner shade wall
   let minC = Infinity, at = 0, sticksOut = false;
   if (H.bulb) {
@@ -1288,12 +1299,8 @@ function lampChecks() {
   return out;
 }
 function fitToFitting() {
-  const L = state.lamp, F = FITTINGS[L.fitting]; if (L.layout === 'dome' || !F.hole) return false;
-  const P = state.shade, target = (F.hole / 2 + lineW(state.print.nozzle) / 2) / MM, v0 = L.layout === 'bell' ? 0 : 1;
-  const delta = target - sampleProf(P.prof, v0);
-  for (let i = 0; i < N; i++) { const d = (i / (N - 1) - v0) / .16; P.prof[i] = +(Math.max(.02, P.prof[i] + delta * Math.exp(-d * d * 2))).toFixed(4); }
-  P.prof[v0 ? N - 1 : 0] = +target.toFixed(4);
-  return true;
+  const L = state.lamp; if (!LAYOUTS[L.layout]) return false;
+  fitProf(state.shade, L.layout, L.fitting, lineW(state.print.nozzle)); return true;
 }
 
 /* ───── technical drawing (SVG, A4 landscape, mm) ───── */
@@ -1324,7 +1331,7 @@ function drawingSVG() {
     // left half: section through the single wall (one line = ${w} mm)
     const wall = outR.map((r, j) => `${f(X(-r))},${f(Y(ys[j]))}`).join(' ') + ' ' + outR.map((r, j) => `${f(X(-(r - w)))},${f(Y(ys[j]))}`).reverse().join(' ');
     o.push(`<polygon points="${wall}" fill="${ink}" stroke="${ink}" stroke-width="${Math.max(.25, w * SC)}" stroke-linejoin="round"/>`);
-    if (k !== 'shade') { const r0 = outR[0], tb = Math.max(1, pr.bottom) * pr.layerH; o.push(`<rect x="${f(X(-r0))}" y="${f(Y(y0 + tb))}" width="${f(r0 * SC)}" height="${f(Math.max(.3, tb * SC))}" fill="${ink}"/>`); }
+    if (k !== 'shade') { const top = k === 'base', r0 = top ? outR[n] : outR[0], tb = Math.max(1, pr.bottom) * pr.layerH, yy = top ? y0 + H : y0 + tb; o.push(`<rect x="${f(X(-r0))}" y="${f(Y(yy))}" width="${f(r0 * SC)}" height="${f(Math.max(.3, tb * SC))}" fill="${ink}"/>`); if (top) T(X(-r0) - 3, Y(yy) - 1.5, `top plate, hole Ø${PLATE_HOLE}`, 'end', 2.2, mute); }
     // right half: elevation with texture envelope and every 5 mm of the spiral
     const env = outR.map((r, j) => r * (1 + P.lobeAmt) + Math.max(P.amp, P.b.amp) * u + (P.mesh?.on ? P.mesh.amp : 0));
     o.push(`<polyline points="${env.map((r, j) => `${f(X(r))},${f(Y(ys[j]))}`).join(' ')}" fill="none" stroke="${ink}" stroke-width=".3"/>`);
@@ -1426,7 +1433,8 @@ function setTool(t) {
   $('#hint').textContent = ui.tool === 'attract' ? 'Tap the surface to add an attractor · tap one again to remove it' : isPaint() ? 'Paint where pattern B should appear · it blends smoothly into A' : 'Drag on the surface to sculpt · drag empty space to orbit';
 }
 document.querySelectorAll('#tools [data-tool]').forEach(b => b.onclick = () => { setTool(b.dataset.tool); if (ui.tool === 'attract' && state[ui.surf]?.mod.src !== 'attract') { pushUndo(); const P = state[state.mode === 'vessel' ? 'vessel' : ui.surf]; P.mod.src = 'attract'; rebuild(); } if ((isPaint() || ui.tool === 'attract') && ui.tab !== 'surface') { ui.tab = 'surface'; renderTabs(); renderPanel(); } });
-function loadState(s) { state = upgrade(s); for (const k in maskCache) delete maskCache[k]; for (const k in imgCache) delete imgCache[k]; if (state.mode === 'vessel') ui.surf = 'vessel'; else if (ui.surf === 'vessel') ui.surf = 'shade'; }
+function normalizeLamp() { const L = state.lamp; if (LAYOUTS[L.layout]) return; L.layout = 'pendant'; L.fitting = 'e27'; L.bulb = 'a60'; fitProf(state.shade, 'pendant', 'e27', lineW(state.print.nozzle)); easeSlope(state.shade); if (state.print.part === 'base') state.print.part = 'shade'; }
+function loadState(s) { state = upgrade(s); normalizeLamp(); for (const k in maskCache) delete maskCache[k]; for (const k in imgCache) delete imgCache[k]; if (state.mode === 'vessel') ui.surf = 'vessel'; else if (ui.surf === 'vessel') ui.surf = 'shade'; }
 undoBtn.onclick = () => { if (!undoStack.length) return; flushMasks(); redoStack.push(JSON.stringify(state)); loadState(JSON.parse(undoStack.pop())); syncUndo(); rebuild(); applyLook(); renderAll(); };
 redoBtn.onclick = () => { if (!redoStack.length) return; flushMasks(); undoStack.push(JSON.stringify(state)); loadState(JSON.parse(redoStack.pop())); syncUndo(); rebuild(); applyLook(); renderAll(); };
 document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
@@ -1515,7 +1523,7 @@ function renderPanel() {
     for (const [k, p] of Object.entries(P)) {
       const b = el('button', {}, [el('span', { textContent:p.name }), el('small', { textContent:p.note })]);
       b.classList.toggle('on', (lamp ? state.preset : state.vpreset) === k);
-      b.onclick = () => { pushUndo(); if (lamp) { state.preset = k; if (p.lamp) state.lamp = { ...state.lamp, ...p.lamp }; state.shade = clone(p.shade); state.base = clone(p.base); delete maskCache.shade; delete maskCache.base; } else { state.vpreset = k; state.vessel = clone(p.vessel); delete maskCache.vessel; } parts().forEach(kk => { if (state[kk].tr.on) applyTransition(kk); adaptToNozzle(kk); }); rebuild(); applyLook(); frameCamera(); renderPanel(); };
+      b.onclick = () => { pushUndo(); if (lamp) { state.preset = k; if (p.lamp) state.lamp = { ...state.lamp, ...p.lamp }; state.shade = clone(p.shade); state.base = clone(p.base); delete maskCache.shade; delete maskCache.base; } else { state.vpreset = k; state.vessel = clone(p.vessel); delete maskCache.vessel; } if (lamp) fitToFitting(); parts().forEach(kk => { if (state[kk].tr.on) applyTransition(kk); adaptToNozzle(kk); }); rebuild(); applyLook(); frameCamera(); renderPanel(); };
       (p.studio ? gA : g).append(b);
     }
     sA.append(gA); s.append(g);
@@ -1671,16 +1679,28 @@ function renderLamp() {
   const L = state.lamp, re = () => { rebuild(); frameCamera(); renderPanel(); };
   const s1 = section('Layout', 'How the shade, socket and bulb fit together.');
   chips(s1, Object.entries(LAYOUTS).map(([k, n]) => [k, n]), L.layout, k => { pushUndo(); L.layout = k;
-    if (k === 'dome') { L.fitting = 'led'; L.bulb = 'led'; } else if (L.fitting === 'led') { L.fitting = 'e27'; L.bulb = 'a60'; }
+    makePrintable('shade'); fitToFitting();
     if (!parts().includes(ui.surf)) ui.surf = 'shade'; if (k === 'pendant') state.print.part = 'shade'; re(); });
   const s2 = section('Fitting & bulb', 'Real sizes. The shade opening can be fitted to the socket’s shade ring.');
-  const fits = L.layout === 'dome' ? ['led'] : ['e27', 'e14'];
-  chips(s2, fits.map(k => [k, FITTINGS[k].name]), L.fitting, k => { pushUndo(); L.fitting = k; L.bulb = Object.keys(BULBS).find(b => BULBS[b].fit === k); re(); });
+  const fits = ['e27', 'e14'];
+  chips(s2, fits.map(k => [k, FITTINGS[k].name]), L.fitting, k => { pushUndo(); L.fitting = k; L.bulb = Object.keys(BULBS).find(b => BULBS[b].fit === k); makePrintable('shade'); fitToFitting(); re(); });
   s2.append(el('div', { className:'sub', textContent:FITTINGS[L.fitting].note, style:'margin:4px 0 8px' }));
   if (L.layout !== 'dome') chips(s2, Object.entries(BULBS).filter(([, b]) => b.fit === L.fitting).map(([k, b]) => [k, `${b.name} · Ø${b.d}×${b.h}`]), L.bulb, k => { pushUndo(); L.bulb = k; re(); });
   slider(s2, 'LED power', () => L.watts, v => L.watts = v, 2, 15, 1, v => v + ' W', () => renderChecksOnly());
   toggle(s2, 'Show socket & bulb', L.hw, v => { L.hw = v; drawHardware(); requestRender(); });
-  if (L.layout !== 'dome') { const b = el('button', { textContent:`Fit shade opening to ${FITTINGS[L.fitting].name} (Ø${FITTINGS[L.fitting].hole})`, style:'margin-top:6px' }); b.onclick = () => { pushUndo(); fitToFitting(); makePrintable('shade'); rebuild(); renderPanel(); toast('Opening fitted to the shade ring'); }; s2.append(b); }
+  if (L.layout !== 'dome') { const b = el('button', { textContent:`Fit shade opening to ${FITTINGS[L.fitting].name} (Ø${FITTINGS[L.fitting].hole})`, style:'margin-top:6px' }); b.onclick = () => { pushUndo(); makePrintable('shade'); fitToFitting(); rebuild(); renderPanel(); toast('Opening fitted to the shade ring'); }; s2.append(b); }
+  const sa = section('Assembly', 'How the printed parts and the hardware go together.');
+  const steps = L.layout === 'bell'
+    ? [`You need: an ${FITTINGS[L.fitting].name.replace(' socket', '')} lamp socket with an outer thread and shade ring, an M10×1 hollow threaded nipple (15–20 mm) with a nut, and a cord with plug and switch.`,
+       `Print the base upside down (the G-code does this). Its top plate has a Ø${PLATE_HOLE} mm hole.`,
+       'Push the nipple through the hole, tighten the nut from inside the base, and screw the socket onto the nipple with the cord running through it.',
+       'Slip the shade’s bottom opening over the socket and clamp it with the shade ring.',
+       'Lead the cord out under the base; file a small notch in the rim so the lamp stands flat.']
+    : [`You need: a pendant cord set with an ${FITTINGS[L.fitting].name.replace(' socket', '')} socket that has an outer thread and shade ring, and a ceiling rose.`,
+       'Pass the socket up through the shade’s top opening from inside.',
+       'Clamp the shade with the shade ring, screw in the bulb and hang it.'];
+  const ol = el('div', { className:'card' }); steps.forEach((t, i) => ol.append(el('div', { className:'chk' }, [el('span', { textContent:i ? String(i) + '.' : '•', style:'font:400 10.5px var(--mono);color:var(--muted);width:14px;flex:none;padding-top:2px' }), el('span', { textContent:t })]))); sa.append(ol);
+  sa.append(el('div', { className:'note', textContent:'Mains wiring should be done or checked by a qualified person.' }));
   const s3 = section('Engineering checks', 'Clearance, heat, glare and stability — updated live.');
   const card = el('div', { className:'card', id:'lampChecks' }); s3.append(card); fillChecks(card);
   const s4 = section('Drawing', 'Half section with dimensions and a title block.');
@@ -1697,7 +1717,7 @@ function renderPrint() {
   const s1 = section('Printer', 'Bambu Lab. G-code is made for the printer you choose here.');
   chips(s1, Object.entries(PRINTERS).map(([k, p]) => [k, p.name]), pr.printer, k => { pushUndo(); pr.printer = k; rr(); });
   const s2 = section('Nozzle', 'Bigger nozzle → thicker, faster, bolder layers. Match the nozzle that’s installed.');
-  chips(s2, NOZZLES.map(n => [n, n + ' mm']), pr.nozzle, n => { pushUndo(); pr.nozzle = n; pr.layerH = +(n * .5).toFixed(2); pr.speed = n === .4 ? 90 : n === .6 ? 70 : 50; pr.bottom = Math.max(2, Math.ceil(.9 / pr.layerH)); busy(() => { const ch = parts().map(adaptToNozzle).some(Boolean); rebuild(); rr(); if (ch) toast(`Patterns coarsened to suit the ${n} mm nozzle`); }); });
+  chips(s2, NOZZLES.map(n => [n, n + ' mm']), pr.nozzle, n => { pushUndo(); pr.nozzle = n; pr.layerH = +(n * .5).toFixed(2); pr.speed = n === .4 ? 90 : n === .6 ? 70 : 50; pr.bottom = Math.max(2, Math.ceil(.9 / pr.layerH)); busy(() => { if (state.mode === 'lamp') fitToFitting(); const ch = parts().map(adaptToNozzle).some(Boolean); rebuild(); rr(); if (ch) toast(`Patterns coarsened to suit the ${n} mm nozzle`); }); });
   slider(s2, 'Layer height', () => pr.layerH, v => pr.layerH = v, +(pr.nozzle * .25).toFixed(2), +(pr.nozzle * .75).toFixed(2), .01, v => v.toFixed(2) + ' mm', () => { updateBadge(); applyLook(); if (state.view === 'printed') parts().forEach(schedulePrinted); if (state.view === 'path') rebuildPaths(); });
   onCommit = () => renderPanel();
   slider(s2, 'Wall speed', () => pr.speed, v => pr.speed = v, 15, 200, 1, v => { const cap = FILAMENTS[pr.filament].flow / (lineW(pr.nozzle) * pr.layerH); return v > cap ? `${v} → ${Math.round(cap)} mm/s (flow limit)` : v + ' mm/s'; });
@@ -1822,7 +1842,7 @@ function zip(files) {
   return new Blob([...out, ...central, new Uint8Array(e.buffer)], { type:'application/zip' });
 }
 function stlOf(k) { const g = buildPart(k, null, true); const d = stlFromGeometry(g); g.dispose(); return d; }
-const readme = () => new TextEncoder().encode(`Monoline export\n\nUnits: millimetres. Each STL is a closed solid.\nBambu Studio: import, enable "Spiral vase" (Others > Special mode), choose the ${state.print.nozzle} mm nozzle, slice, print.\nShade: set bottom shell layers to 0 (it is open at both ends).\nG-code files are made for ${PRINTERS[state.print.printer].name}, ${state.print.nozzle} mm nozzle, ${FILAMENTS[state.print.filament].name}. Copy to the printer's microSD card and start from the printer screen.\n`);
+const readme = () => new TextEncoder().encode(`Monoline export\n\nUnits: millimetres. Each STL is a closed solid.\nBambu Studio: import, enable "Spiral vase" (Others > Special mode), choose the ${state.print.nozzle} mm nozzle, slice, print.\nShade: set bottom shell layers to 0 (it is open at both ends).\nBase: print it upside down so the solid plate is at the top of the lamp, and drill a 10.5 mm hole in its centre for the socket's M10 nipple (the G-code already leaves this hole).\nG-code files are made for ${PRINTERS[state.print.printer].name}, ${state.print.nozzle} mm nozzle, ${FILAMENTS[state.print.filament].name}. Copy to the printer's microSD card and start from the printer screen.\n`);
 async function exportSTL(k) {
   flushMasks();
   await saveFile(`${k}.stl`, new Blob([stlOf(k)], { type:'model/stl' }), true);
@@ -1854,6 +1874,7 @@ async function saveFile(name, blob, wrapIfNeeded = false) {
 }
 
 /* ═════════════════════ go ═════════════════════ */
+normalizeLamp();
 for (const k of ['shade', 'base', 'vessel']) if (state[k].tr.on && !state[k].mask) applyTransition(k);   // presets carry their transition as settings
 $('#status').onclick = () => { ui.tab = TABS_FOR().includes(statusTab) ? statusTab : 'print'; ui.fold = { ...ui.fold }; renderTabs(); renderPanel(); openPanel(true); const c = [...document.querySelectorAll('#body .sec h3')].find(h => /Printability|Engineering/.test(h.textContent)); c?.scrollIntoView({ block:'start' }); };
 $('#fitBtn').onclick = () => frameCamera();
