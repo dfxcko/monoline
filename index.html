@@ -137,6 +137,39 @@
     #viewbar{left:12px;top:54px}
   }
   @media (min-width:761px){ #tools #editBtn{display:none} }
+  header h1{cursor:pointer}
+  header button.txt{padding:6px 12px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+  .presets button .th{display:block;height:62px;background:#f7f6f2;border-radius:2px;margin-bottom:5px}
+  .presets button .th svg,.tile .th svg{width:100%;height:100%;display:block}
+  #start{position:fixed;inset:0;background:#fff;z-index:35;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #start.show{display:block}
+  #start .in{max-width:1000px;margin:0 auto;padding:34px 22px 70px}
+  #start .top{display:flex;align-items:flex-start;gap:12px}
+  #start h2{margin:0;font:400 46px/1 var(--serif);font-style:italic;letter-spacing:-.01em}
+  #start .lead{margin:8px 0 22px;color:var(--soft);font:400 22px/1.2 var(--serif)}
+  #start .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  #start .filters button{padding:6px 12px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  #start h4{margin:26px 0 10px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:10px}
+  .tile{border:1px solid var(--line);border-radius:4px;padding:0;text-align:left;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+  .tile .th{background:#f7f6f2;aspect-ratio:1/1;padding:12px}
+  .tile .tx{padding:10px 11px 12px;display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--hair)}
+  .tile .tx span{font:400 20px/1 var(--serif)}
+  .tile .tx small{color:var(--muted);font:400 9.5px/1.45 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  #start .foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px;padding-top:18px;border-top:1px solid var(--hair)}
+  #share{position:fixed;inset:0;background:rgba(255,255,255,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:41;display:none;align-items:center;justify-content:center;padding:20px}
+  #share.show{display:flex}
+  #share .box{max-width:440px;width:100%;background:#fff;border:1px solid var(--line);border-radius:4px;padding:24px}
+  #share h2{margin:0 0 6px;font:400 30px/1 var(--serif);font-style:italic}
+  #share p{margin:0 0 14px;color:var(--muted);font-size:13px}
+  #share input{width:100%;font:400 11px var(--mono);color:var(--ink);background:#fafaf8;border:1px solid var(--line);border-radius:3px;padding:10px;margin-bottom:12px}
+  #share .btns{display:flex;gap:6px;flex-wrap:wrap}
+  @media (max-width:760px){
+    header{gap:6px} header button{padding:7px 8px} #helpBtn{display:none}
+    #start .in{padding:22px 14px 60px} #start h2{font-size:36px} #start .lead{font-size:19px;margin-bottom:16px}
+    #start .filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px 14px;padding:0 14px}
+    .tiles{grid-template-columns:1fr 1fr;gap:8px} .tile .tx span{font-size:18px}
+  }
 </style>
 <script type="importmap">
 { "imports": {
@@ -149,11 +182,13 @@
 <div id="stage"></div>
 <header>
   <h1><i>Monoline</i></h1>
-  <div class="seg" id="modeSeg"><button data-mode="lamp">Lamp</button><button data-mode="vessel">Vessel</button></div>
+  <button id="newBtn" class="txt" title="Choose another piece">New</button>
   <div class="sp"></div>
   <button id="undoBtn" title="Undo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
-  <button id="fitBtn" title="Fit to view"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   <button id="redoBtn" title="Redo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+  <button id="resetBtn" title="Reset — back to how this piece started"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 3.5v5h5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></button>
+  <button id="fitBtn" title="Fit to view"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button id="shareBtn" title="Share a link to this design"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M8 7l4-4 4 4M5 12v8h14v-8"/></svg></button>
   <button id="helpBtn" title="How it works" style="font:400 13px var(--mono);width:34px">?</button>
 </header>
 <div id="viewbar"><div class="seg" id="viewSeg"><button data-view="path">Path</button><button data-view="printed">Beads</button><button data-view="surface">Surface</button><button data-view="drawing">Drawing</button></div><div id="badge"></div><button id="status" title="Printability — tap for details"><span class="dot ok"></span><span id="statusTxt">Checking…</span></button></div>
@@ -175,16 +210,30 @@
 <div id="toast"></div>
 <div id="help"><div class="box">
   <h2>Monoline</h2>
-  <p class="lead">Design a lamp or vessel that prints as one continuous line.</p>
+  <p class="lead">Design lamps, shades, vases and planters that print as one continuous line.</p>
   <ol>
-    <li><span><b>Pick a piece.</b> Start from a ready-to-print design or a simple form (Shape tab). Switch Lamp / Vessel at the top.</span></li>
+    <li><span><b>Pick a piece.</b> Lamps, shades for a lamp you own, vases, bowls and planters. <b>New</b> at the top brings the choice back.</span></li>
     <li><span><b>Shape it.</b> Drag on the object to sculpt; drag empty space to turn it, pinch or scroll to zoom. Type exact sizes under Dimensions.</span></li>
     <li><span><b>Give it a surface.</b> Choose patterns, fade one into another, paint them on, or open the wall with holes (Surface tab).</span></li>
     <li><span><b>Check it.</b> The pill at the top left shows if it will print. Path shows the nozzle line, Beads the printed layers, Drawing a dimensioned section.</span></li>
     <li><span><b>Print it.</b> Choose printer, nozzle and filament, then download G-code or STL (Print tab).</span></li>
+    <li><span><b>Changed your mind?</b> Undo steps back; the round arrow resets the piece to how it started. The arrow-up button makes a link to share it.</span></li>
   </ol>
   <button id="helpClose" class="on" style="padding:9px 18px">Start designing</button>
   <p class="lead" style="margin:16px 0 0;font-size:12px">Made by <a href="https://davidficko.com" style="color:inherit">David Ficko</a></p>
+
+</div></div>
+<div id="start"><div class="in">
+  <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
+  <div class="filters" id="startCats"></div>
+  <div id="startBody"></div>
+  <div class="foot"><button id="startOpen">Open a design file…</button><button id="startHelp">How it works</button></div>
+</div></div>
+<div id="share"><div class="box">
+  <h2>Share this design</h2>
+  <p id="shareNote"></p>
+  <input id="shareUrl" readonly>
+  <div class="btns"><button id="shareCopy" class="on">Copy link</button><button id="shareSys">Share…</button><button id="shareClose">Close</button></div>
 </div></div>
 <div id="busy">Working…</div>
 <input type="file" id="fileIn" accept=".json,application/json" hidden>
@@ -205,7 +254,13 @@ const NP0 = () => ({ mid:0, rim:0, waves:4, tilt:0 });
 const MESH0 = () => ({ on:false, mode:'radial', amp:2, lobes:32, rings:1, bumps:2, width:1, stagger:true, rim:6, holeW:5, holeH:5, holeH2:8, grad:'even', follow:true });
 const MOD0 = () => ({ src:'none', target:'depth', lift:2, strength:.8, invert:false, radius:30, attrs:[], img:'', repeat:1, noise:3, seed:7 });
 const TR0 = () => ({ on:false, dir:'around', pos:.5, soft:.08, span:.5, slant:.1, flip:false });
-const part = (h, p, A, B, color, lobes = 0, lobeAmt = 0, np = {}, mod = {}, mesh = {}, tr = {}) => ({ h, prof:p, ...A, b:B, mask:'', lobes, lobeAmt, color, np:{ ...NP0(), ...np }, mod:{ ...MOD0(), ...mod }, mesh:{ ...MESH0(), ...mesh }, tr:{ ...TR0(), ...tr } });
+const SECT0 = () => ({ n:0, k:.8, n2:-1, twist:0 });   // cross-section: n sides (0 = round, 2 = oval), corner sharpness, shape at the top (-1 = same), twist in sides
+const PLANTER0 = () => ({ on:false, hole:0, rim:16, auto:true });
+const PARTS = ['shade', 'base', 'vessel', 'saucer'];
+const part = (h, p, A, B, color, lobes = 0, lobeAmt = 0, np = {}, mod = {}, mesh = {}, tr = {}, sect = {}) => ({ h, prof:p, ...A, b:B, mask:'', lobes, lobeAmt, color, np:{ ...NP0(), ...np }, mod:{ ...MOD0(), ...mod }, mesh:{ ...MESH0(), ...mesh }, tr:{ ...TR0(), ...tr }, sect:{ ...SECT0(), ...sect } });
+const PLAIN = () => pat('smooth', 0, 40, 20);
+const STEM = () => part(1.2, prof(v => .2), PLAIN(), PLAIN(), '#b8b5ae');   // stands in for the lamp you already own
+const SAUCER0 = c => part(.16, prof(v => .5), PLAIN(), PLAIN(), c || '#c96a3b');
 
 const LAMP_PRESETS = {
   // ── finished pieces ──
@@ -218,6 +273,16 @@ const LAMP_PRESETS = {
   sash:{ studio:true, name:'Sash', note:'Pendant · a knurled ribbon winds through ribs', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
     shade:part(1.9, prof(v => (22.2 + 94 * Math.pow(1 - v, .74)) / MM), pat('ribs', .005, 72, 20, .2), pat('knurl', .0035, 72, 44, .2), '#c96a3b', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }),
     base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#c96a3b') },
+  pleat:{ studio:true, name:'Pleat', note:'Pendant · deep pleats · fits any cord set', lamp:{ layout:'pendant', fitting:'e27', bulb:'a60', watts:6 },
+    shade:part(1.5, prof(v => (22.2 + 90 * Math.pow(1 - v, .85)) / MM), pat('ribs', .007, 36, 20), PLAIN(), '#f3ead8'), base:STEM() },
+  tulip:{ studio:true, name:'Tulip', note:'New shade for a table lamp you own', lamp:{ layout:'bell', own:true, fitting:'e27', bulb:'a60', watts:6 },
+    shade:part(1.5, prof(v => (22.2 + 62 * Math.sin(Math.PI * .78 * Math.pow(v, .6))) / MM), pat('woven', .004, 44, 30), PLAIN(), '#f1d98a'), base:STEM() },
+  carre:{ name:'Carré', note:'Soft-square shade for a lamp you own', lamp:{ layout:'bell', own:true, fitting:'e27', bulb:'a60', watts:6 },
+    shade:part(1.4, prof(v => (22.2 + 70 * Math.pow(v, .62)) / MM), pat('rings', .003, 40, 36), PLAIN(), '#8fb8e8', 0, 0, {}, {}, {}, {}, { n:4, k:.8 }), base:STEM() },
+  bloom:{ name:'Bloom', note:'Petal shade for an E14 bedside lamp', lamp:{ layout:'bell', own:true, fitting:'e14', bulb:'p45', watts:4 },
+    shade:part(1.0, prof(v => (15.8 + 46 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('rings', .003, 40, 30), PLAIN(), '#ef7d5a', 6, .06), base:STEM() },
+  facet:{ name:'Facet', note:'Six-sided pendant shade', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
+    shade:part(1.6, prof(v => (22.2 + 96 * Math.pow(1 - v, .8)) / MM), pat('rings', .003, 40, 40), PLAIN(), '#a9d6b8', 0, 0, {}, {}, {}, {}, { n:6, k:.8 }), base:STEM() },
   globe:{ name:'Globe', note:'E27 bulb, shade on socket ring', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
     shade:part(1.6, prof(v => { const z = v * 160; return Math.min(22.2 + z * .95, 75, 35 + (160 - z) * .95) / MM; }), pat('rings', .004, 40, 24), pat('woven', .004, 40, 24), '#f2efe8'),
     base: part(.55, prof(v => .58 - .28 * v), pat('ribs', .01, 56, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
@@ -245,6 +310,14 @@ const VESSEL_PRESETS = {
     vessel:part(.7, prof(v => .42 + .4 * Math.pow(Math.sin(v * Math.PI / 2), 1.2)), pat('knurl', .0035, 96, 22, .15), pat('smooth', 0, 40, 20), '#f1d98a', 3, .03, { rim:4, waves:6 }) },
   sieve:{ studio:true, name:'Sieve basket', note:'Solid foot · holes open toward the rim',
     vessel:part(.8, prof(v => .5 + .3 * Math.sin(v * Math.PI / 2)), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.2, holeH:2.4, holeH2:5.4, grad:'linear', rim:6 }) },
+  terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
+    vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .004, 40, 36), PLAIN(), '#c96a3b') },
+  quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
+    vessel:part(1.0, prof(v => .46 + .14 * Math.pow(v, .8)), PLAIN(), pat('knurl', .0035, 64, 30), '#7f8f7a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.55, soft:.12 }, { n:4, k:.75 }) },
+  twist:{ studio:true, cat:'vase', name:'Twist vase', note:'Square foot turning into a round lip',
+    vessel:part(1.8, prof(v => .34 + .05 * Math.sin(v * Math.PI) - .04 * v), pat('rings', .003, 40, 70), PLAIN(), '#8fb8e8', 0, 0, {}, {}, {}, {}, { n:4, k:.85, n2:0, twist:1 }) },
+  herb:{ cat:'planter', name:'Herb trough', note:'Oval pot for the windowsill · saucer', planter:{ on:true, hole:8 },
+    vessel:part(.8, prof(v => .75 + .1 * v), pat('ribs', .006, 48, 20), PLAIN(), '#ddd3c4', 0, 0, {}, {}, {}, {}, { n:2, k:.62 }) },
   bud:{ name:'Bud vase', note:'Round belly, narrow neck',
     vessel:part(.95, prof(v => .12 + .25 * Math.exp(-(((v - .3) / .28) ** 2)) + .05 * smooth(.8, 1, v)), pat('woven', .005, 28, 16), pat('ribs', .008, 32, 16), '#e7d9c4') },
   tall:{ name:'Tall vase', note:'For dried stems',
@@ -277,6 +350,7 @@ function easeSlope(P, deg = 45) {
   for (let i = iMax - 1; i >= 0; i--) pr[i] = +Math.min(Math.max(pr[i], pr[i + 1] - maxD), pr[i + 1] + maxD).toFixed(4);
 }
 for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k]) easeSlope(p[k]);
+{ const VCAT = { tide:'bowl', sieve:'bowl', bowl:'bowl', crown:'bowl' }; for (const [k, p] of Object.entries(VESSEL_PRESETS)) p.cat = p.cat || VCAT[k] || 'vase'; }
 
 const PRINTERS = {
   a1mini:{ name:'A1 mini', bed:[180,180], maxZ:180, park:[10,170], purgeY:4 },
@@ -311,36 +385,38 @@ const LAYOUTS = { bell:'Table lamp · shade clamps on the socket', pendant:'Pend
 const ringH = F => (F.h - 18) / MM;   // height of the socket's shade ring above its foot (scene units)
 const PLATE_HOLE = 10.5;             // mm, hole in the base's top plate for an M10 threaded nipple
 const PEND_Y = .55;
-const LAMP0 = () => ({ layout:'bell', fitting:'e27', bulb:'a60', watts:6, hw:true });
+const LAMP0 = () => ({ layout:'bell', own:false, fitting:'e27', bulb:'a60', watts:6, hw:true });
 for (const p of Object.values(LAMP_PRESETS)) { fitProf(p.shade, p.lamp.layout, p.lamp.fitting); easeSlope(p.shade, 44); }   // every lamp's opening fits its socket
 const lineW = n => +(n * 1.12).toFixed(2);
 
 const clone = o => JSON.parse(JSON.stringify(o));
 function defaultState() {
   const L = LAMP_PRESETS.ember, V = VESSEL_PRESETS.helix;
-  return { v:4, view:'path', risks:true, mode:'lamp', preset:'ember', vpreset:'helix', shade:clone(L.shade), base:clone(L.base), vessel:clone(V.vessel),
+  return { v:5, view:'path', risks:true, mode:'lamp', preset:'ember', vpreset:'helix', shade:clone(L.shade), base:clone(L.base), vessel:clone(V.vessel), saucer:SAUCER0(), planter:PLANTER0(),
     collar:'#b8b5ae', light:{ on:false, power:1, warmth:.35 }, lamp:{ ...LAMP0(), ...L.lamp },
     print:{ printer:'x1c', nozzle:.4, filament:'pla', layerH:.2, speed:90, orient:'rim', bottom:4, abl:true, part:'shade', layerLines:true, customStart:'' } };
 }
 function upgrade(s) {
   const d = defaultState();
   if (!s || typeof s !== 'object') return d;
-  const o = { ...d, ...s, print:{ ...d.print, ...(s.print || {}) }, light:{ ...d.light, ...(s.light || {}) }, lamp:{ ...LAMP0(), ...(s.lamp || {}) } };
-  for (const k of ['shade', 'base', 'vessel']) {
+  const o = { ...d, ...s, print:{ ...d.print, ...(s.print || {}) }, light:{ ...d.light, ...(s.light || {}) }, lamp:{ ...LAMP0(), ...(s.lamp || {}) }, planter:{ ...PLANTER0(), ...(s.planter || {}) } };
+  for (const k of PARTS) {
     const P = s[k]; if (!P || !Array.isArray(P.prof)) { o[k] = d[k]; continue; }
-    o[k] = { ...d[k], ...P, b:{ ...d[k].b, ...(P.b || {}) }, np:{ ...NP0(), ...(P.np || {}) }, mod:{ ...MOD0(), ...(P.mod || {}) }, mesh:{ ...MESH0(), ...(P.mesh || {}) }, tr:{ ...TR0(), ...(P.tr || {}) } };
+    o[k] = { ...d[k], ...P, b:{ ...d[k].b, ...(P.b || {}) }, np:{ ...NP0(), ...(P.np || {}) }, mod:{ ...MOD0(), ...(P.mod || {}) }, mesh:{ ...MESH0(), ...(P.mesh || {}) }, tr:{ ...TR0(), ...(P.tr || {}) }, sect:{ ...SECT0(), ...(P.sect || {}) } };
     if (o[k].prof.length !== N) o[k].prof = d[k].prof;
   }
-  if (!s.v || s.v < 4) { o.view = 'path'; o.v = 4; }
-  for (const k of ['shade', 'base', 'vessel']) if (o[k].mod.target !== 'lift') o[k].mod.target = 'depth';
-  for (const k of ['shade', 'base', 'vessel']) { const M = o[k].mesh; if (M && M.mode === 'zwave' && !(s[k]?.mesh?.holeW)) { M.holeW = +(Math.PI * Math.max(...o[k].prof) * MM / Math.max(6, M.lobes)).toFixed(1); M.holeH = +(M.amp * 4).toFixed(1); } }
+  if (!s.v || s.v < 4) o.view = 'path';
+  o.v = 5;
+  for (const k of PARTS) if (o[k].mod.target !== 'lift') o[k].mod.target = 'depth';
+  for (const k of PARTS) { const M = o[k].mesh; if (M && M.mode === 'zwave' && !(s[k]?.mesh?.holeW)) { M.holeW = +(Math.PI * Math.max(...o[k].prof) * MM / Math.max(6, M.lobes)).toFixed(1); M.holeH = +(M.amp * 4).toFixed(1); } }
   return o;
 }
-let state;
-try { state = upgrade(JSON.parse(localStorage.getItem('monoline.v1') || localStorage.getItem('spiral.v1') || localStorage.getItem('lampstudio.v2') || localStorage.getItem('lampstudio.v1'))); } catch (e) { state = defaultState(); }
+let state, hadSaved = false;
+try { hadSaved = !!localStorage.getItem('monoline.v1'); state = upgrade(JSON.parse(localStorage.getItem('monoline.v1') || localStorage.getItem('spiral.v1') || localStorage.getItem('lampstudio.v2') || localStorage.getItem('lampstudio.v1'))); } catch (e) { state = defaultState(); }
 
-const ui = { fold:{}, tool:'grab', brush:.16, strength:.6, paintSize:22, tab:'shape', surf:state.mode === 'vessel' ? 'vessel' : 'shade' };
-const parts = () => state.mode === 'lamp' ? (state.lamp.layout === 'pendant' ? ['shade'] : ['shade', 'base']) : ['vessel'];
+const ui = { fold:{}, cat:'all', started:false, tool:'grab', brush:.16, strength:.6, paintSize:22, tab:'shape', surf:state.mode === 'vessel' ? 'vessel' : 'shade' };
+const parts = () => state.mode === 'lamp' ? (state.lamp.layout === 'pendant' || state.lamp.own ? ['shade'] : ['shade', 'base']) : (state.planter.on ? ['vessel', 'saucer'] : ['vessel']);
+const PART_NAMES = k => ({ shade:'Shade', base:'Base', vessel:state.planter.on ? 'Pot' : 'Vessel', saucer:'Saucer' })[k];
 
 /* ═════════════════════ undo / persistence ═════════════════════ */
 const undoStack = [], redoStack = [];
@@ -376,15 +452,16 @@ function maskAt(m, th, v) { // bilinear, wraps in θ (seamless around the circum
 }
 
 // Transition between pattern A and B, written into the paint mask (wraps around, so no seam).
-function applyTransition(k) {
-  const P = state[k], T = P.tr, m = getMask(k); maskCache[k].live = true;
+function applyTransition(k) { getMask(k).set(transitionMask(k)); maskCache[k].live = true; flushMasks(); }
+function transitionMask(k) {
+  const P = state[k], T = P.tr, m = new Float32Array(MW * MH);
   const soft = Math.max(.008, T.soft);
   for (let j = 0; j < MH; j++) { const v = j / (MH - 1);
     for (let i = 0; i < MW; i++) { let f;
       if (T.dir === 'height') f = smooth(T.pos - soft, T.pos + soft, v);
       else { const c = T.pos + T.slant * (v - .5); let d = Math.abs((((i / MW - c) % 1) + 1.5) % 1 - .5); f = T.span >= .999 ? 1 : 1 - smooth(T.span / 2 - soft, T.span / 2 + soft, d); }
       m[j * MW + i] = T.flip ? 1 - f : f; } }
-  flushMasks();
+  return m;
 }
 
 /* ═════════════════════ surface definition ═════════════════════ */
@@ -426,7 +503,7 @@ function disp(P, th, v, m) {
   return a + (b - a) * w;
 }
 const rimFade = v => Math.min(1, Math.min(v, 1 - v) * 40);
-const keyOf = P => P === state.shade ? 'shade' : P === state.base ? 'base' : 'vessel';
+const keyOf = P => P === state.shade ? 'shade' : P === state.base ? 'base' : P === state.saucer ? 'saucer' : 'vessel';
 // Modulation field (0..1) after the book's "attractor" and "Image Sampler" strategies.
 const imgCache = {}, noiseCache = {};
 function getImg(k) {
@@ -467,7 +544,36 @@ function warpMM(P, k, th, v) {
   if (lift) w += P.mod.lift * P.mod.strength * (2 * field(P, th, v) - 1) * env;
   return w;
 }
-const lobeF = (P, th) => 1 + P.lobeAmt * Math.cos(Math.round(P.lobes) * th);
+// Cross-section: a rounded polygon in polar form (n = 2 is an oval). k = 0 is a circle, k = 1 a sharp polygon; widest point stays at the profile radius.
+const polyF = (n, k, th) => n < 2 ? 1 : Math.cos(2 / n * Math.asin(k)) / Math.cos(2 / n * Math.asin(k * Math.sin(n * th / 2)));
+const sectOn = P => !!P.sect && (P.sect.n >= 2 || P.sect.n2 >= 2);
+function sectF(P, th, v) {
+  const S = P.sect; if (!sectOn(P)) return 1;
+  const k = Math.sin(Math.min(.95, Math.max(0, S.k)) * Math.PI / 2), n2 = S.n2 < 0 ? S.n : S.n2;
+  const t = th - S.twist * TAU / Math.max(2, S.n || n2) * v, a = polyF(S.n, k, t);
+  return n2 === S.n ? a : a + (polyF(n2, k, t) - a) * smooth(0, 1, v);
+}
+const sectMin = P => { if (!sectOn(P)) return 1; const S = P.sect, c = n => n >= 2 ? Math.cos(Math.min(.95, S.k) * Math.PI / n) : 1; return Math.min(c(S.n), c(S.n2 < 0 ? S.n : S.n2)); };
+// radius multiplier around the form: petals × cross-section. A lamp shade stays round where it meets the socket.
+function lobeF(P, th, v = 0) {
+  let f = (1 + P.lobeAmt * Math.cos(Math.round(P.lobes) * th)) * sectF(P, th, v);
+  if (f !== 1 && P === state.shade) f = 1 + (f - 1) * smooth(.02, .3, state.lamp.layout === 'bell' ? v : 1 - v);
+  return f;
+}
+const minF = P => (1 - P.lobeAmt) * sectMin(P);
+// matching saucer: follows the pot's foot with a few mm to spare
+function fitSaucer() {
+  const V = state.vessel, S = state.saucer, pl = state.planter, w = lineW(state.print.nozzle), hS = Math.max(8, pl.rim), H = V.h * MM;
+  let rf = 0; for (let z = 0; z <= hS + 2; z += 2) rf = Math.max(rf, sampleProf(V.prof, Math.min(1, z / H)) * MM);
+  rf += 2 * Math.max(V.amp, V.b.amp) * MM + 3 + w;
+  S.h = +(hS / MM).toFixed(3); S.prof = prof(v => (rf + Math.min(hS * .55, 9) * v) / MM);
+  S.sect = { ...V.sect, n2:-1, twist:0 }; S.lobes = V.lobes; S.lobeAmt = V.lobeAmt;
+}
+function saucerGap() { // smallest gap (mm) between the pot wall and the inside of the saucer
+  const V = state.vessel, S = state.saucer, w = lineW(state.print.nozzle), hS = S.h * MM, H = V.h * MM; let g = Infinity;
+  for (let z = 0; z <= hS; z += 1) g = Math.min(g, sampleProf(S.prof, Math.min(1, z / hS)) * MM - w - sampleProf(V.prof, Math.min(1, z / H)) * MM - Math.max(V.amp, V.b.amp) * MM);
+  return g;
+}
 // Mesh / open lattice (per printed layer): a plain ring layer, then layers whose line bulges outward at N spots.
 // The bulges bridge over air and sag a little, which opens the gaps. Line width never changes — the path only moves out.
 // Layer changes happen at an angle between bulges, so the single continuous line has no jump.
@@ -518,7 +624,7 @@ function zwAt(tb, t, th, N, lh) {
 }
 const meshLap = (P, t, th) => Math.floor(t - Math.PI / (2 * Math.max(4, Math.round(P.mesh.lobes))) / TAU);
 // outer surface radius (scene units)
-function surfR(P, th, v, m) { const d = disp(P, th, v, m); return Math.max(.02, sampleProf(P.prof, v) * lobeF(P, th) + d * rimFade(v) * (d ? depthMul(P, th, v) : 1)); }
+function surfR(P, th, v, m) { const d = disp(P, th, v, m); return Math.max(.02, sampleProf(P.prof, v) * lobeF(P, th, v) + d * rimFade(v) * (d ? depthMul(P, th, v) : 1)); }
 
 function resFor(P) {
   const tex = [P.tex, P.b.tex], amp = Math.max(P.amp, P.b.amp);
@@ -527,13 +633,14 @@ function resFor(P) {
   const segs = amp ? Math.min(Math.max(Math.round(Math.max(P.freq, P.b.freq) * 10), 180), 560) : Math.max(160, P.lobes * 24);
   return { rings, segs };
 }
-const partY0 = k => k !== 'shade' ? 0 : state.lamp.layout === 'pendant' ? PEND_Y : state.lamp.layout === 'bell' ? state.base.h + ringH(FITTINGS[state.lamp.fitting] || FITTINGS.e27) : state.base.h + COLLAR_H - state.shade.h;
+const partY0 = k => k === 'shade' ? (state.lamp.layout === 'pendant' ? PEND_Y : state.base.h + ringH(FITTINGS[state.lamp.fitting] || FITTINGS.e27))
+  : k === 'vessel' && state.mode === 'vessel' && state.planter.on ? Math.max(1, Math.round(state.print.bottom)) * state.print.layerH / MM : 0;   // the pot stands on the saucer's floor
 const lampTop = () => state.lamp.layout === 'dome' ? state.base.h + COLLAR_H : partY0('shade') + state.shade.h;
 
 function buildPart(k, geom, closed = false) {
   const P = state[k], y0 = closed ? 0 : partY0(k), m = getMask(k);
   const { rings, segs } = resFor(P);
-  const capB = closed || k === 'vessel', capT = closed || k === 'base';
+  const capB = closed || k === 'vessel' || k === 'saucer', capT = closed || k === 'base';
   const vCount = (rings + 1) * segs + (capB ? segs + 1 : 0) + (capT ? segs + 1 : 0);
   const triCount = rings * segs * 2 + (capB ? segs : 0) + (capT ? segs : 0);
   let pos, glow, pm;
@@ -702,11 +809,13 @@ const matOpts = { roughness:.85, side:THREE.DoubleSide, polygonOffset:true, poly
 const shadeMat = patch(new THREE.MeshStandardMaterial(matOpts), false);
 const baseMat = patch(new THREE.MeshStandardMaterial(matOpts), false);
 const vesselMat = patch(new THREE.MeshStandardMaterial(matOpts), false);
+const saucerMat = patch(new THREE.MeshStandardMaterial(matOpts), false);
 const collarMat = new THREE.MeshStandardMaterial({ color:0xc9c6bf, metalness:.2, roughness:.5 });
 const meshes = {
   shade:new THREE.Mesh(new THREE.BufferGeometry(), shadeMat),
   base:new THREE.Mesh(new THREE.BufferGeometry(), baseMat),
   vessel:new THREE.Mesh(new THREE.BufferGeometry(), vesselMat),
+  saucer:new THREE.Mesh(new THREE.BufferGeometry(), saucerMat),
 };
 Object.values(meshes).forEach(m => scene.add(m));
 const collarMesh = new THREE.Mesh(undefined, collarMat); scene.add(collarMesh);
@@ -773,7 +882,7 @@ function buildPathLines(k) {
 }
 function rebuildPaths(list = parts()) {
   pathStride = parts().some(k => isZW(state[k])) ? 1 : strideNow();
-  for (const k of ['shade', 'base', 'vessel']) if (pathObjs[k] && (!parts().includes(k) || state.view !== 'path')) { scene.remove(pathObjs[k]); pathObjs[k].geometry.dispose(); delete pathObjs[k]; }
+  for (const k of PARTS) if (pathObjs[k] && (!parts().includes(k) || state.view !== 'path')) { scene.remove(pathObjs[k]); pathObjs[k].geometry.dispose(); delete pathObjs[k]; }
   if (state.view !== 'path') { updateBadge(); return; }
   for (const k of list) {
     const { g, layers, shown } = buildPathLines(k);
@@ -783,7 +892,7 @@ function rebuildPaths(list = parts()) {
   updateBadge(); requestRender();
 }
 
-const geoms = { shade:{}, base:{}, vessel:{} }, pendingPrinted = new Set(); let printedT;
+const geoms = { shade:{}, base:{}, vessel:{}, saucer:{} }, pendingPrinted = new Set(); let printedT;
 const interacting = () => !!drag || sliderDirty;
 function schedulePrinted(k) {
   pendingPrinted.add(k); clearTimeout(printedT);
@@ -798,13 +907,14 @@ function schedulePrinted(k) {
 function rebuild(which = 'all', keepPath = false) {
   if (!keepPath) clearPath();
   const list = which === 'all' ? parts() : [which];
+  if (state.mode === 'vessel' && state.planter.on && state.planter.auto && which !== 'saucer') { fitSaucer(); if (!list.includes('saucer')) list.push('saucer'); }
   for (const k of list) {
     geoms[k].smooth = buildPart(k, geoms[k].smooth || null);
     meshes[k].geometry = geoms[k].smooth;
     if (state.view === 'printed') { if (interacting()) schedulePrinted(k); else { geoms[k].printed = buildPrinted(k, geoms[k].printed); meshes[k].geometry = geoms[k].printed; } }
   }
   const lamp = state.mode === 'lamp', lay = state.lamp.layout;
-  meshes.shade.visible = collarMesh.visible = lamp; meshes.base.visible = lamp && lay !== 'pendant'; meshes.vessel.visible = !lamp;
+  meshes.shade.visible = collarMesh.visible = lamp; meshes.base.visible = lamp && parts().includes('base'); meshes.vessel.visible = !lamp; meshes.saucer.visible = !lamp && state.planter.on;
   if (lamp) {
     const F = FITTINGS[state.lamp.fitting];
     let rTop = lay === 'dome' ? Math.max(sampleProf(state.base.prof, 1), sampleProf(state.shade.prof, 1)) + .015 : F.flange / 2 / MM;
@@ -821,9 +931,18 @@ const attrGroup = new THREE.Group(); scene.add(attrGroup);
 const attrGeo = new THREE.SphereGeometry(.018, 16, 12), attrMat = new THREE.MeshBasicMaterial({ color:0x3d6bff, depthTest:false });
 const hwGroup = new THREE.Group(); scene.add(hwGroup);
 const hwMat = new THREE.MeshStandardMaterial({ color:0x2a2927, roughness:.6 });
+const standMat = new THREE.MeshStandardMaterial({ color:0xdedbd4, roughness:.8 });
 const bulbMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:.3, transparent:true, opacity:.45, depthWrite:false, side:THREE.DoubleSide });
 function drawHardware() {
   hwGroup.traverse(o => o.geometry && o.geometry.dispose()); hwGroup.clear();
+  if (state.mode === 'vessel' && state.planter.hole > 0) { // drainage hole, drawn on the pot's floor
+    const r = state.planter.hole / 2 / MM, pts = []; for (let i = 0; i <= 48; i++) pts.push(new THREE.Vector3(r * Math.cos(i / 48 * TAU), partY0('vessel') + .004, r * Math.sin(i / 48 * TAU)));
+    hwGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x121211 })));
+  }
+  if (state.mode === 'lamp' && state.lamp.own && state.lamp.layout === 'bell') { // the lamp you already own: a plain stand
+    const h = state.base.h, stem = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, h, 24), standMat), foot = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, .014, 64), standMat);
+    stem.position.y = h / 2; foot.position.y = .007; hwGroup.add(stem, foot);
+  }
   if (state.mode !== 'lamp' || !state.lamp.hw) return;
   const H = hardware(); if (!H) return;
   const sock = new THREE.Mesh(new THREE.CylinderGeometry(H.sock.r, H.sock.r, H.sock.h, 40), hwMat); sock.position.y = H.sock.y + H.sock.h / 2; hwGroup.add(sock);
@@ -844,7 +963,7 @@ function applyLook() {
   const v = state.view, white = new THREE.Color(0xffffff);
   // path view: pale surface so the dark toolpath reads clearly; beads/surface: filament colour
   const tone = c => v === 'path' ? new THREE.Color(c).lerp(white, .82) : new THREE.Color(c);
-  shadeMat.color.copy(tone(state.shade.color)); baseMat.color.copy(tone(state.base.color)); vesselMat.color.copy(tone(state.vessel.color));
+  shadeMat.color.copy(tone(state.shade.color)); baseMat.color.copy(tone(state.base.color)); vesselMat.color.copy(tone(state.vessel.color)); saucerMat.color.copy(tone(state.saucer.color));
   U.uLayer.value = state.print.layerH / MM; U.uLayerAmt.value = state.print.layerLines && v === 'surface' ? 1 : 0;
   U.uRisk.value = v === 'printed' && state.risks ? 1 : 0;
   key.intensity = v === 'printed' ? 1.9 : 1.5;
@@ -878,7 +997,7 @@ function hitTest(ray) { // analytic march against surfaces of revolution
     const P = state[k], y0 = partY0(k), m = getMask(k), maxR = Math.max(...P.prof) * (1 + P.lobeAmt) + Math.max(P.amp, P.b.amp) + .02;
     const steps = 360, t1 = camera.position.distanceTo(controls.target) + 4, dt = t1 / steps;
     const vAt = (y, th) => { let v = (y - y0) / P.h; for (let it = 0; it < 3; it++) v = (y - y0 - warpMM(P, k, th, Math.min(1, Math.max(0, v))) / MM) / P.h; return v; };
-    const inside = t => { ray.at(t, p); const rr = Math.hypot(p.x, p.z); if (rr > maxR) return false; const th = Math.atan2(p.z, p.x), v = vAt(p.y, th); if (v < 0 || v > 1) return false; return rr <= sampleProf(P.prof, v) * lobeF(P, th) + Math.max(P.amp, P.b.amp) * .5; };
+    const inside = t => { ray.at(t, p); const rr = Math.hypot(p.x, p.z); if (rr > maxR) return false; const th = Math.atan2(p.z, p.x), v = vAt(p.y, th); if (v < 0 || v > 1) return false; return rr <= sampleProf(P.prof, v) * lobeF(P, th, v) + Math.max(P.amp, P.b.amp) * .5; };
     for (let s = 0; s <= steps; s++) {
       const t = s * dt; if (best && t > best.t) break;
       if (inside(t)) {
@@ -907,7 +1026,7 @@ function showBrush(hit) {
   [hit.v, hit.v - ui.brush * .7, hit.v + ui.brush * .7].forEach((vv, n) => {
     const l = brushRings[n]; if (vv < 0 || vv > 1) return;
     const R = sampleProf(P.prof, vv) + Math.max(P.amp, P.b.amp) + .012, y = y0 + vv * P.h, a = l.geometry.attributes.position.array;
-    for (let i = 0; i <= 96; i++) { const th = i / 96 * TAU, rr = R * lobeF(P, th); a[i * 3] = rr * Math.cos(th); a[i * 3 + 1] = y + warpMM(P, hit.part, th, vv) / MM; a[i * 3 + 2] = rr * Math.sin(th); }
+    for (let i = 0; i <= 96; i++) { const th = i / 96 * TAU, rr = R * lobeF(P, th, vv); a[i * 3] = rr * Math.cos(th); a[i * 3 + 1] = y + warpMM(P, hit.part, th, vv) / MM; a[i * 3 + 2] = rr * Math.sin(th); }
     l.geometry.attributes.position.needsUpdate = true; l.visible = true;
   });
   requestRender();
@@ -966,7 +1085,7 @@ stage.addEventListener('pointerdown', e => {
     rebuild(hit.part); if (ui.tab === 'surface') renderPanel(); return;
   }
   stage.setPointerCapture?.(e.pointerId);
-  pushUndo(); hideHint();
+  pushUndo(); hideHint(); if (hit.part === 'saucer') state.planter.auto = false;   // a saucer shaped by hand stops following the pot
   drag = { part:hit.part, hit, id:e.pointerId, s0:planeCoord(raycaster.ray), snap:state[hit.part].prof.slice() };
   showBrush(hit);
   if (ui.tool !== 'grab') { lastT = 0; requestAnimationFrame(holdLoop); }
@@ -1014,6 +1133,8 @@ function toolpath(k) {
   const W = (th, z) => { const w = warpMM(P, k, thM(th), vOf(z)); return flip ? -w : w; };  // non-planar offset in print space
 
   const wallSpeed = Math.min(pr.speed, fil.flow / (w * lh));
+  // on a non-round outline the inward loops are offset square to the wall, not toward the centre, so they stay one line apart
+  const body = (th, z) => { const v = vOf(z); return sampleProf(P.prof, v) * lobeF(P, flip ? -th : th, v) * MM; }, slant = new Float32Array(segs + 1);
   const bottom = (k === 'shade') ? 0 : Math.max(0, Math.round(pr.bottom));
   // 1) solid bottom layers: outer loop + concentric loops inward, one continuous line per layer
   for (let L = 0; L < bottom; L++) {
@@ -1021,8 +1142,9 @@ function toolpath(k) {
     let ring = 0, first = true;
     while (true) {
       const off = ring * w * .96; let minR = Infinity; const pts = [];
-      for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, zc) - off; minR = Math.min(minR, r); pts.push([r * Math.cos(th), r * Math.sin(th)]); }
-      if (minR < (k === 'base' ? PLATE_HOLE / 2 + w * .5 : w * .55)) break;   // leave the nipple hole open in the base plate
+      if (!ring) for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, b = body(th, zc), db = (body(th + .002, zc) - body(th - .002, zc)) / .004; slant[s] = Math.min(2.2, Math.hypot(b, db) / b); }
+      for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, zc) - off * slant[s]; minR = Math.min(minR, r); pts.push([r * Math.cos(th), r * Math.sin(th)]); }
+      if (minR < (k === 'base' ? PLATE_HOLE / 2 + w * .5 : k === 'vessel' && state.planter.hole > 0 ? state.planter.hole / 2 + w * .5 : w * .55)) break;   // leave the nipple hole (base plate) or drainage hole (pot) open
       pts.forEach((q, i) => push(q[0], q[1], z, first && i === 0 ? 1 : 0, feed));
       first = false; ring++;
     }
@@ -1093,7 +1215,7 @@ function showPath() {
 }
 
 /* ═════════════════════ printability ═════════════════════ */
-const printPart = () => state.mode === 'vessel' ? 'vessel' : (state.print.part === 'base' && state.lamp.layout !== 'pendant' ? 'base' : 'shade');
+const printPart = () => parts().includes(state.print.part) ? state.print.part : parts()[0];
 function checks(k) {
   const pr = state.print, P = state[k], m = getMask(k), printer = PRINTERS[pr.printer];
   const w = lineW(pr.nozzle), lh = pr.layerH, H = P.h * MM, out = [];
@@ -1107,7 +1229,9 @@ function checks(k) {
   if (rMin * 2 < 8) add('bad', `Narrowest point is only ${(rMin * 2).toFixed(1)} mm across — too tight to spiral.`);
   // overhang from the silhouette
   let worst = 0, at = 0;
-  for (let j = 0; j < 200; j++) { const v0 = j / 200, v1 = (j + 1) / 200; const dr = (sampleProf(P.prof, v1) - sampleProf(P.prof, v0)) * MM, dz = H / 200; const a = Math.atan2(Math.abs(dr), dz) * 180 / Math.PI; if (a > worst) { worst = a; at = v0; } }
+  const nTh = sectOn(P) ? 24 : 1;   // a twisting or changing cross-section leans differently around the form
+  for (let j = 0; j < 200; j++) { const v0 = j / 200, v1 = (j + 1) / 200, dz = H / 200;
+    for (let i = 0; i < nTh; i++) { const th = i / nTh * TAU, dr = (sampleProf(P.prof, v1) * (nTh > 1 ? lobeF(P, th, v1) : 1) - sampleProf(P.prof, v0) * (nTh > 1 ? lobeF(P, th, v0) : 1)) * MM; const a = Math.atan2(Math.abs(dr), dz) * 180 / Math.PI; if (a > worst) { worst = a; at = v0; } } }
   const lim = 50 + (pr.nozzle - .4) * 15;
   add(worst > lim + 8 ? 'bad' : worst > lim ? 'warn' : 'ok', `Steepest overhang ${worst.toFixed(0)}° at ${Math.round(at * 100)}% height (≈${lim.toFixed(0)}° is safe with a ${pr.nozzle} mm nozzle).`);
   // layer-to-layer step caused by the textures (must stay well inside one line width)
@@ -1150,6 +1274,9 @@ function checks(k) {
   }
   if (P.mod.src === 'attract' && !P.mod.attrs.length) add('warn', 'Attractor source chosen but no points placed yet — tap the surface with the Attractor tool.');
   if (k === 'shade') { const rTop = sampleProf(P.prof, 1) * MM - w; add('ok', `Top opening is about Ø${(rTop * 2).toFixed(0)} mm inside — check your lamp socket fits.`); }
+  if (state.mode === 'vessel' && state.planter.on) { const g = saucerGap(); add(g < 1 ? 'bad' : 'ok', g < 1 ? `The pot does not fit inside its saucer (${g.toFixed(1)} mm). Use “Match saucer to pot”.` : `The pot stands in its saucer with ${g.toFixed(0)} mm to spare all round.`); }
+  if (k === 'vessel' && state.planter.hole > 0) add(pr.bottom < 1 ? 'warn' : 'ok', pr.bottom < 1 ? 'Drainage hole needs at least one solid bottom layer.' : `Drainage hole Ø${state.planter.hole} mm is left open in the bottom (G-code). In an STL, drill it afterwards.`);
+  if (sectOn(P)) add('ok', `Cross-section is not round: the line keeps its ${w} mm width and simply follows the outline. Sizes are measured across the widest points.`);
   if (k === 'base') add('ok', `Base prints upside down: its solid top plate (with a Ø${PLATE_HOLE} mm hole for an M10 nipple) goes on the bed. The bottom stays open for the cord.`);
   return out;
 }
@@ -1253,7 +1380,8 @@ function bulbR(b, z) { const R = b.d / 2, cz = Math.max(0, b.h - R), rn = Math.m
 // inner radius of the shade wall at a world height (mm), worst case around the circumference
 function shadeInnerAt(y) {
   const P = state.shade, v = (y - partY0('shade')) / P.h; if (v < 0 || v > 1) return null;
-  return (sampleProf(P.prof, v) * (1 - P.lobeAmt) - Math.max(P.amp, P.b.amp)) * MM - lineW(state.print.nozzle);
+  let f = Infinity; for (let i = 0; i < 48; i++) f = Math.min(f, lobeF(P, i / 48 * TAU, v));
+  return (sampleProf(P.prof, v) * f - Math.max(P.amp, P.b.amp)) * MM - lineW(state.print.nozzle);
 }
 function partMass(k) { // grams and centre-of-mass height (mm, world), from the single-wall spiral + solid bottom
   const P = state[k], fil = FILAMENTS[state.print.filament], w = lineW(state.print.nozzle), y0 = partY0(k) * MM, H = P.h * MM;
@@ -1270,7 +1398,8 @@ function lampChecks() {
     const okFit = din >= H.F.d + .5 && din <= H.F.flange - 5;
     add(okFit ? 'ok' : 'bad', okFit ? `Attaches: the shade's ${lay === 'bell' ? 'bottom' : 'top'} opening (Ø${din.toFixed(0)} mm) slips over the ${H.F.name} thread and is clamped by its shade ring.`
       : `Can't attach: the shade's ${lay === 'bell' ? 'bottom' : 'top'} opening is Ø${din.toFixed(0)} mm, but the ${H.F.name} shade ring needs Ø${H.F.hole} mm. Use “Fit shade opening”.`);
-    if (lay === 'bell') { const dt = sampleProf(state.base.prof, 1) * u * 2; add(dt < 30 ? 'bad' : 'ok', dt < 30 ? `Base top is only Ø${dt.toFixed(0)} mm — too small for the socket and its nut (needs ≥ 30 mm).` : `Socket mounts on the base's top plate (Ø${dt.toFixed(0)} mm) with an M10 nipple and nut.`); }
+    if (state.lamp.own) add('ok', lay === 'bell' ? `Shade only: it fits a lamp you already own, as long as its ${H.F.name} has an outer thread and a shade ring.` : `Shade only: it fits any pendant cord set whose ${H.F.name} has an outer thread and a shade ring.`);
+    else if (lay === 'bell') { const dt = sampleProf(state.base.prof, 1) * u * 2; add(dt < 30 ? 'bad' : 'ok', dt < 30 ? `Base top is only Ø${dt.toFixed(0)} mm — too small for the socket and its nut (needs ≥ 30 mm).` : `Socket mounts on the base's top plate (Ø${dt.toFixed(0)} mm) with an M10 nipple and nut.`); }
   }
   // clearance between bulb (or LED module) and the inner shade wall
   let minC = Infinity, at = 0, sticksOut = false;
@@ -1288,10 +1417,10 @@ function lampChecks() {
   if (lay === 'bell') { const rt = sampleProf(P.prof, 1) * u, yt = y0 + P.h * u, a = Math.atan2(yt - ly, rt) * 180 / Math.PI; add(a < 15 ? 'warn' : 'ok', `Glare: the bulb is visible only when looking down into the top opening from more than ${a.toFixed(0)}° above horizontal.`); }
   else { const rr = sampleProf(P.prof, 0) * u, a = Math.atan2(ly - y0, rr) * 180 / Math.PI; add(a < 15 ? 'warn' : 'ok', `Glare cut-off ${a.toFixed(0)}°: the light source is hidden unless you look up into the shade from more than ${a.toFixed(0)}° below horizontal.`); }
   // stability (table lamps)
-  if (lay !== 'pendant') {
+  if (lay !== 'pendant' && !state.lamp.own) {
     const ms = parts().map(partMass); let M = 0, MY = 0; for (const p of ms) { M += p.m; MY += p.m * p.y; }
     const hwM = H.F.mass + (H.B.mass || 0), hwY = (H.bulb ? H.bulb.y0 + H.bulb.h / 2 : H.sock.y) * u; M += hwM; MY += hwM * hwY;
-    const hcm = MY / M, Rf = sampleProf(state.base.prof, 0) * (1 - state.base.lobeAmt) * u, tip = Math.atan2(Rf, hcm) * 180 / Math.PI;
+    const hcm = MY / M, Rf = sampleProf(state.base.prof, 0) * minF(state.base) * u, tip = Math.atan2(Rf, hcm) * 180 / Math.PI;
     const need = Math.max(0, M * (hcm * Math.tan(18 * Math.PI / 180) / Rf - 1));
     add(tip < 12 ? 'bad' : tip < 18 ? 'warn' : 'ok', `Weighs ≈ ${M.toFixed(0)} g, centre of mass at ${hcm.toFixed(0)} mm; tips over at ${tip.toFixed(0)}°.` + (need > 5 ? ` Add ≈ ${Math.ceil(need / 10) * 10} g of ballast in the base (steel washers, sand bag) for ≥ 18°.` : ''));
   }
@@ -1432,17 +1561,122 @@ function setTool(t) {
   U.uMaskShow.value = isPaint() ? 1 : 0; showBrush(null);
   $('#hint').textContent = ui.tool === 'attract' ? 'Tap the surface to add an attractor · tap one again to remove it' : isPaint() ? 'Paint where pattern B should appear · it blends smoothly into A' : 'Drag on the surface to sculpt · drag empty space to orbit';
 }
-document.querySelectorAll('#tools [data-tool]').forEach(b => b.onclick = () => { setTool(b.dataset.tool); if (ui.tool === 'attract' && state[ui.surf]?.mod.src !== 'attract') { pushUndo(); const P = state[state.mode === 'vessel' ? 'vessel' : ui.surf]; P.mod.src = 'attract'; rebuild(); } if ((isPaint() || ui.tool === 'attract') && ui.tab !== 'surface') { ui.tab = 'surface'; renderTabs(); renderPanel(); } });
+document.querySelectorAll('#tools [data-tool]').forEach(b => b.onclick = () => { setTool(b.dataset.tool); if (ui.tool === 'attract' && state[ui.surf]?.mod.src !== 'attract') { pushUndo(); const P = state[parts().includes(ui.surf) ? ui.surf : parts()[0]]; P.mod.src = 'attract'; rebuild(); } if ((isPaint() || ui.tool === 'attract') && ui.tab !== 'surface') { ui.tab = 'surface'; renderTabs(); renderPanel(); } });
+// ── thumbnails: a small line drawing of a piece, made from its outline ──
+function saucerFor(V) { let rf = 0; for (let z = 0; z <= 18; z += 2) rf = Math.max(rf, sampleProf(V.prof, Math.min(1, z / (V.h * MM))) * MM); return { h:.16, prof:prof(v => (rf + 4 + 9 * v) / MM), color:V.color, mesh:{} }; }
+function thumbSVG(p, lamp) {
+  const items = [], u = MM, extra = []; let top = 0, rMax = 0;
+  if (lamp) {
+    const L = { ...LAMP0(), ...p.lamp }, F = FITTINGS[L.fitting], pend = L.layout === 'pendant', shadeOnly = pend || L.own, hb = pend ? 0 : p.base.h * u;
+    if (!shadeOnly) items.push({ P:p.base, y:0 });
+    items.push({ P:p.shade, y:pend ? 0 : hb + F.h - 18 });
+    if (pend) extra.push(['cord', p.shade.h * u, p.shade.h * u + 45]); else if (L.own) extra.push(['stand', hb + F.h - 18]);
+  } else { if (p.planter?.on) items.push({ P:saucerFor(p.vessel), y:0 }); items.push({ P:p.vessel, y:p.planter?.on ? 1 : 0 }); }
+  for (const it of items) { top = Math.max(top, it.y + it.P.h * u); rMax = Math.max(rMax, Math.max(...it.P.prof) * u); }
+  for (const e of extra) if (e[0] === 'cord') top = Math.max(top, e[2]); else rMax = Math.max(rMax, 60);
+  const sc = Math.min(84 / top, 84 / (rMax * 2)), X = r => 50 + r * sc, Y = y => 92 - y * sc, f = n => n.toFixed(1), o = [];
+  for (const e of extra) {
+    if (e[0] === 'cord') o.push(`<path d="M50 ${f(Y(e[1]))}V${f(Y(e[2]))}" stroke="#121211" stroke-width="1"/>`);
+    else o.push(`<path d="M${f(X(-60))} 92H${f(X(60))}M50 92V${f(Y(e[1]))}" stroke="#86827a" stroke-width="1.2" fill="none"/>`);
+  }
+  for (const { P, y } of items) {
+    const n = 36, H = P.h * u, L = [], R = [];
+    for (let j = 0; j <= n; j++) { const r = sampleProf(P.prof, j / n) * u, yy = f(Y(y + j / n * H)); L.push(`${f(X(-r))} ${yy}`); R.push(`${f(X(r))} ${yy}`); }
+    o.push(`<path d="M${L.join('L')}L${R.reverse().join('L')}Z" fill="${P.color}" fill-opacity=".5" stroke="#121211" stroke-width="1" stroke-linejoin="round"/>`);
+    const lines = Math.max(2, Math.round(H * sc / 4.2)); let d = '';
+    for (let i = 1; i < lines; i++) { const v = i / lines, r = sampleProf(P.prof, v) * u; d += `M${f(X(-r))} ${f(Y(y + v * H))}H${f(X(r))}`; }
+    o.push(`<path d="${d}" stroke="#121211" stroke-width=".55" opacity=".42" fill="none"${P.mesh?.on ? ' stroke-dasharray="2.4 2"' : ''}/>`);
+  }
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
+}
+const thumbEl = (p, lamp) => el('span', { className:'th', innerHTML:thumbSVG(p, lamp) });
+// ── start from a preset ──
+let origin = null;
+function markOrigin() { flushMasks(); origin = JSON.stringify(state); try { localStorage.setItem('monoline.origin', origin); } catch (e) {} }
+function applyPreset(mode, k) {
+  pushUndo(); const lamp = mode === 'lamp', p = (lamp ? LAMP_PRESETS : VESSEL_PRESETS)[k]; state.mode = mode;
+  if (lamp) { state.preset = k; state.lamp = { ...state.lamp, own:false, ...p.lamp }; state.shade = clone(p.shade); state.base = clone(p.base); delete maskCache.shade; delete maskCache.base; fitToFitting(); }
+  else { state.vpreset = k; state.vessel = clone(p.vessel); state.planter = { ...PLANTER0(), ...(p.planter || {}) }; state.saucer = SAUCER0(p.vessel.color); delete maskCache.vessel; delete maskCache.saucer; if (state.planter.on) fitSaucer(); }
+  ui.surf = parts()[0]; if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape';
+  parts().forEach(kk => { if (state[kk].tr.on) applyTransition(kk); adaptToNozzle(kk); });
+  markOrigin(); rebuild(); applyLook(); frameCamera(); renderAll();
+}
+// ── start screen ──
+const CATS = [['all', 'All'], ['table', 'Table lamps'], ['pendant', 'Pendant shades'], ['shade', 'Shades for your lamp'], ['vase', 'Vases'], ['bowl', 'Bowls'], ['planter', 'Planters']];
+const catOf = (p, lamp) => lamp ? (p.lamp.layout === 'pendant' ? 'pendant' : p.lamp.own ? 'shade' : 'table') : p.cat;
+const startEl = $('#start');
+function renderStart() {
+  const cats = $('#startCats'), bodyS = $('#startBody'); cats.innerHTML = ''; bodyS.innerHTML = '';
+  for (const [k, n] of CATS) { const b = el('button', { textContent:n }); b.classList.toggle('on', ui.cat === k); b.onclick = () => { ui.cat = k; renderStart(); }; cats.append(b); }
+  const all = [...Object.entries(LAMP_PRESETS).map(([k, p]) => ({ k, p, lamp:true })), ...Object.entries(VESSEL_PRESETS).map(([k, p]) => ({ k, p, lamp:false }))].filter(x => ui.cat === 'all' || catOf(x.p, x.lamp) === ui.cat);
+  for (const [title, list] of [['Ready to print', all.filter(x => x.p.studio)], ['Simple forms to make your own', all.filter(x => !x.p.studio)]]) {
+    if (!list.length) continue;
+    const g = el('div', { className:'tiles' });
+    for (const { k, p, lamp } of list) {
+      const t = el('button', { className:'tile' }, [thumbEl(p, lamp), el('span', { className:'tx' }, [el('span', { textContent:p.name }), el('small', { textContent:p.note })])]);
+      t.onclick = () => { applyPreset(lamp ? 'lamp' : 'vessel', k); showStart(false); ui.started = true; try { if (!localStorage.getItem('monoline.help')) showHelp(true); } catch (e) {} };
+      g.append(t);
+    }
+    bodyS.append(el('h4', { textContent:title }), g);
+  }
+  $('#startClose').style.display = ui.started ? '' : 'none';
+}
+function showStart(v) { startEl.classList.toggle('show', v); if (v) { renderStart(); startEl.scrollTop = 0; } }
+$('#newBtn').onclick = () => showStart(true);
+document.querySelector('header h1').onclick = () => showStart(true);
+$('#startClose').onclick = () => showStart(false);
+$('#startOpen').onclick = () => $('#fileIn').click();
+$('#startHelp').onclick = () => showHelp(true);
+// ── reset: back to how this piece started (the preset, opened file or shared link) ──
+$('#resetBtn').onclick = () => {
+  if (!origin) return; pushUndo(); const pr = state.print, view = state.view;
+  loadState(JSON.parse(origin)); state.print = { ...pr, part:state.print.part }; state.view = view;
+  if (state.mode === 'lamp') fitToFitting();
+  parts().forEach(k => { if (state[k].tr.on && !state[k].mask) applyTransition(k); adaptToNozzle(k); });
+  rebuild(); applyLook(); frameCamera(); renderAll(); toast('Reset · Undo brings your changes back');
+};
+// ── share link: the whole design travels inside the link, nothing is uploaded ──
+const b64u = u8 => { let t = ''; for (let i = 0; i < u8.length; i += 8192) t += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = t => Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+const pipe = async (u8, T) => new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(T)).arrayBuffer());
+function shareState() {
+  flushMasks(); const o = clone(state), keep = parts();
+  for (const k of PARTS) { if (!keep.includes(k)) { delete o[k]; continue; } if (o[k].tr.on && o[k].mask === encodeMask(transitionMask(k))) o[k].mask = ''; }   // a plain transition is rebuilt from its settings
+  o.print = { ...o.print, customStart:'' }; delete o.light; return o;
+}
+const onSite = () => /^https?:$/.test(location.protocol) && /(^|\.)monoline\.si$|^localhost$|^127\./.test(location.hostname);
+async function shareLink() {
+  const raw = new TextEncoder().encode(JSON.stringify(shareState())); let tag = 'j', data = raw;
+  try { if (typeof CompressionStream !== 'undefined') { data = await pipe(raw, new CompressionStream('deflate-raw')); tag = 'z'; } } catch (e) { data = raw; tag = 'j'; }
+  return (onSite() ? location.origin + location.pathname : 'https://monoline.si/') + '#d=' + tag + b64u(data);
+}
+async function readShared(hash) {
+  const m = /^#d=([zj])(.+)$/.exec(hash || ''); if (!m) return null;
+  let u8 = unb64u(m[2]); if (m[1] === 'z') u8 = await pipe(u8, new DecompressionStream('deflate-raw'));
+  const d = JSON.parse(new TextDecoder().decode(u8)); if (!d.shade?.prof && !d.vessel?.prof) throw 0; return d;
+}
+async function openShared() {
+  if (!/^#d=/.test(location.hash)) return;
+  try { const d = await readShared(location.hash); pushUndo(); loadState(d); for (const k of parts()) if (state[k].tr.on && !state[k].mask) applyTransition(k);
+    ui.started = true; showStart(false); markOrigin(); rebuild(); applyLook(); frameCamera(); renderAll(); toast('Shared design opened'); }
+  catch (e) { toast('That link is not a Monoline design'); }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+}
+addEventListener('hashchange', openShared);
+const shareEl = $('#share');
+$('#shareBtn').onclick = () => busy(async () => {
+  const url = await shareLink(); $('#shareUrl').value = url;
+  $('#shareNote').textContent = `Anyone who opens this link gets this exact design in Monoline, ready to change or print. Nothing is uploaded: the design is inside the link (${url.length > 4000 ? 'a long one, ' + Math.round(url.length / 1000) + ' k characters, because it carries hand-painted patterns' : url.length + ' characters'}).` + (onSite() ? '' : ' The link opens on monoline.si.');
+  $('#shareSys').style.display = navigator.share ? '' : 'none'; shareEl.classList.add('show');
+});
+$('#shareClose').onclick = () => shareEl.classList.remove('show');
+shareEl.addEventListener('click', e => { if (e.target === shareEl) shareEl.classList.remove('show'); });
+$('#shareCopy').onclick = async () => { const i = $('#shareUrl'); try { await navigator.clipboard.writeText(i.value); toast('Link copied'); } catch (e) { i.focus(); i.select(); try { document.execCommand('copy'); toast('Link copied'); } catch (e2) { toast('Select the link and copy it'); } } };
+$('#shareSys').onclick = async () => { try { await navigator.share({ title:'Monoline design', url:$('#shareUrl').value }); } catch (e) {} };
 function normalizeLamp() { const L = state.lamp; if (LAYOUTS[L.layout]) return; L.layout = 'pendant'; L.fitting = 'e27'; L.bulb = 'a60'; fitProf(state.shade, 'pendant', 'e27', lineW(state.print.nozzle)); easeSlope(state.shade); if (state.print.part === 'base') state.print.part = 'shade'; }
-function loadState(s) { state = upgrade(s); normalizeLamp(); for (const k in maskCache) delete maskCache[k]; for (const k in imgCache) delete imgCache[k]; if (state.mode === 'vessel') ui.surf = 'vessel'; else if (ui.surf === 'vessel') ui.surf = 'shade'; }
+function loadState(s) { state = upgrade(s); normalizeLamp(); for (const k in maskCache) delete maskCache[k]; for (const k in imgCache) delete imgCache[k]; if (!parts().includes(ui.surf)) ui.surf = parts()[0]; if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape'; }
 undoBtn.onclick = () => { if (!undoStack.length) return; flushMasks(); redoStack.push(JSON.stringify(state)); loadState(JSON.parse(undoStack.pop())); syncUndo(); rebuild(); applyLook(); renderAll(); };
 redoBtn.onclick = () => { if (!redoStack.length) return; flushMasks(); undoStack.push(JSON.stringify(state)); loadState(JSON.parse(redoStack.pop())); syncUndo(); rebuild(); applyLook(); renderAll(); };
-document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
-function setMode(m) {
-  if (state.mode === m) return; pushUndo(); state.mode = m; ui.surf = m === 'vessel' ? 'vessel' : 'shade';
-  if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape';
-  rebuild(); applyLook(); frameCamera(); renderAll();
-}
 addEventListener('keydown', e => {
   if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT' && document.activeElement.type !== 'range') return;
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); (e.shiftKey ? redoBtn : undoBtn).onclick(); return; }
@@ -1461,7 +1695,6 @@ const tabsEl = $('#tabs'), body = $('#body');
 function renderTabs() {
   tabsEl.innerHTML = '';
   for (const k of TABS_FOR()) { const b = document.createElement('button'); b.textContent = TAB_NAMES[k]; b.classList.toggle('on', ui.tab === k); b.onclick = () => { ui.tab = k; renderTabs(); renderPanel(); }; tabsEl.appendChild(b); }
-  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
 }
 function renderAll() { renderTabs(); renderPanel(); updateBadge(); }
 const el = (tag, attrs = {}, kids = []) => { const e = document.createElement(tag); Object.assign(e, attrs); kids.forEach(k => e.append(k)); return e; };
@@ -1517,20 +1750,21 @@ function renderPanel() {
   body.innerHTML = ''; onCommit = null;
   const lamp = state.mode === 'lamp';
   if (ui.tab === 'shape') {
-    const sA = section('Ready to print', 'Finished pieces — pick one, choose your printer and nozzle, export.');
-    const s = section('Start from', lamp ? 'Simple forms to sculpt into your own.' : 'Simple forms for vases and bowls.');
-    const gA = el('div', { className:'presets' }), g = el('div', { className:'presets' }), P = lamp ? LAMP_PRESETS : VESSEL_PRESETS;
-    for (const [k, p] of Object.entries(P)) {
-      const b = el('button', {}, [el('span', { textContent:p.name }), el('small', { textContent:p.note })]);
+    const curCat = lamp ? catOf({ lamp:state.lamp }, true) : (VESSEL_PRESETS[state.vpreset]?.cat || 'vase'), P = lamp ? LAMP_PRESETS : VESSEL_PRESETS;
+    const sA = section(CATS.find(c => c[0] === curCat)[1], 'Pick a piece to start from. Reset (round arrow, top right) brings it back as it was.');
+    const g = el('div', { className:'presets' });
+    for (const [k, p] of Object.entries(P).filter(([, p]) => catOf(p, lamp) === curCat).sort((a, b) => !!b[1].studio - !!a[1].studio)) {
+      const b = el('button', {}, [thumbEl(p, lamp), el('span', { textContent:p.name }), el('small', { textContent:p.studio ? 'Ready to print' : p.note })]);
       b.classList.toggle('on', (lamp ? state.preset : state.vpreset) === k);
-      b.onclick = () => { pushUndo(); if (lamp) { state.preset = k; if (p.lamp) state.lamp = { ...state.lamp, ...p.lamp }; state.shade = clone(p.shade); state.base = clone(p.base); delete maskCache.shade; delete maskCache.base; } else { state.vpreset = k; state.vessel = clone(p.vessel); delete maskCache.vessel; } if (lamp) fitToFitting(); parts().forEach(kk => { if (state[kk].tr.on) applyTransition(kk); adaptToNozzle(kk); }); rebuild(); applyLook(); frameCamera(); renderPanel(); };
-      (p.studio ? gA : g).append(b);
+      b.onclick = () => applyPreset(state.mode, k);
+      g.append(b);
     }
-    sA.append(gA); s.append(g);
+    sA.append(g);
+    const more = el('button', { textContent:'All pieces — lamps, shades, vases, planters…', style:'margin-top:8px' }); more.onclick = () => showStart(true); sA.append(more);
     const s2 = section('Proportions');
     if (lamp) {
-      slider(s2, 'Shade height', () => state.shade.h, v => state.shade.h = v, .2, 1.4, .01, cmF, () => rebuild());
-      slider(s2, 'Base height', () => state.base.h, v => state.base.h = v, .3, 1.8, .01, cmF, () => rebuild());
+      slider(s2, 'Shade height', () => state.shade.h, v => state.shade.h = v, .2, 2.4, .01, cmF, () => rebuild());
+      if (parts().includes('base')) slider(s2, 'Base height', () => state.base.h, v => state.base.h = v, .3, 1.8, .01, cmF, () => rebuild());
     } else slider(s2, 'Height', () => state.vessel.h, v => state.vessel.h = v, .2, 2.4, .01, cmF, () => rebuild());
     const wi = slider(s2, 'Overall width', () => 1, () => {}, .5, 1.5, .01, pct);
     wi.oninput = function () {
@@ -1540,8 +1774,8 @@ function renderPanel() {
     };
     wi.onchange = function () { sliderDirty = false; this.value = 1; this.previousElementSibling.querySelector('b').textContent = '100%'; };
     const sd = section('Dimensions', 'Type exact diameters (mm) at heights along the part.', '', { open:false });
-    const dk = lamp ? (parts().includes(ui.surf) ? ui.surf : 'shade') : 'vessel';
-    if (lamp && parts().length > 1) chips(sd, [['shade', 'Shade'], ['base', 'Base']], dk, k => { ui.surf = k; renderPanel(); });
+    const dk = parts().includes(ui.surf) ? ui.surf : parts()[0];
+    if (parts().length > 1) chips(sd, parts().map(k => [k, PART_NAMES(k)]), dk, k => { ui.surf = k; renderPanel(); });
     const DP = state[dk], grid = el('div', { className:'dims', style:'margin-top:8px' });
     const hIn = el('input', { type:'number', min:20, max:400, step:1, value:Math.round(DP.h * MM) });
     hIn.onchange = () => { pushUndo(); DP.h = Math.min(4, Math.max(.2, +hIn.value / MM)); rebuild(); frameCamera(); renderPanel(); };
@@ -1554,15 +1788,41 @@ function renderPanel() {
       grid.append(el('span', { textContent:`Ø AT ${Math.round(v * DP.h * MM)}` }), inp, el('span', { textContent:'mm' }));
     }
     sd.append(grid);
+    // cross-section
+    const SP = state[dk], S = SP.sect, son = sectOn(SP), rs = () => rebuild(dk);
+    const SHAPES = [[0, 'Round'], [2, 'Oval'], [3, 'Triangle'], [4, 'Square'], [5, 'Pentagon'], [6, 'Hexagon'], [8, 'Octagon']];
+    const sx = section('Cross-section', 'Round, oval or many-sided. The line keeps its width and follows the outline.', parts().length > 1 ? PART_NAMES(dk) : '', { open:son, status:son ? SHAPES.find(x => x[0] === S.n)[1] + (S.n2 >= 0 && S.n2 !== S.n ? ' → ' + SHAPES.find(x => x[0] === S.n2)[1] : '') : 'round', on:son });
+    chips(sx, SHAPES, S.n, n => { pushUndo(); S.n = n; rs(); frameCamera(); renderPanel(); });
+    sx.append(el('div', { className:'sub', textContent:'Changes into, at the top', style:'margin:10px 0 2px' }));
+    chips(sx, [[-1, 'Same'], ...SHAPES], S.n2 === S.n ? -1 : S.n2, n => { pushUndo(); S.n2 = n; rs(); renderPanel(); });
+    if (son) {
+      slider(sx, S.n === 2 && (S.n2 < 0 || S.n2 === 2) ? 'How oval' : 'Corners', () => S.k, v => S.k = v, .15, .95, .01, v => S.n === 2 && (S.n2 < 0 || S.n2 === 2) ? `${Math.round((1 - Math.cos(v * Math.PI / 2)) * 100)}% narrower` : v < .45 ? 'very soft' : v < .7 ? 'soft' : v < .88 ? 'rounded' : 'crisp', rs);
+      const nn = Math.max(2, S.n || S.n2);
+      slider(sx, 'Twist up the height', () => S.twist, v => S.twist = v, -2, 2, .05, v => v ? Math.round(v * 360 / nn) + '°' : 'none', rs);
+      if (dk === 'shade') sx.append(el('div', { className:'note', textContent:'A lamp shade stays round where it meets the socket, so the shade ring can clamp it.' }));
+      sx.append(el('div', { className:'note', textContent:'Diameters are measured across the widest points (corner to corner).' }));
+    }
+    if (!lamp) { // planter
+      const pl = state.planter, plOn = pl.on || pl.hole > 0;
+      const sp = section('Planter', 'A matching saucer and a drainage hole turn a vessel into a plant pot.', '', { open:plOn, status:plOn ? 'on' : 'off', on:plOn });
+      toggle(sp, 'Saucer', pl.on, v => { pl.on = v; pl.auto = true; if (v) { state.saucer.color = state.vessel.color; fitSaucer(); } if (!parts().includes(ui.surf)) ui.surf = 'vessel'; rebuild(); frameCamera(); });
+      toggle(sp, 'Drainage hole', pl.hole > 0, v => { pl.hole = v ? 10 : 0; rebuild(); });
+      if (pl.hole > 0) slider(sp, 'Hole size', () => pl.hole, v => pl.hole = v, 5, 25, 1, v => 'Ø' + v + ' mm', () => rebuild());
+      if (pl.on) {
+        slider(sp, 'Saucer rim height', () => pl.rim, v => { pl.rim = v; pl.auto = true; }, 8, 35, 1, v => v + ' mm', () => rebuild());
+        if (!pl.auto) { const b = el('button', { textContent:'Match saucer to pot', style:'margin-top:6px' }); b.onclick = () => { pushUndo(); pl.auto = true; rebuild(); renderPanel(); toast('Saucer matched to the pot'); }; sp.append(b); }
+        sp.append(el('div', { className:'note', textContent:pl.auto ? 'The saucer follows the pot: same outline, a few millimetres wider. Sculpt it yourself and it stops following.' : 'You shaped the saucer by hand, so it no longer follows the pot.' }));
+      }
+    }
     const s3 = section('Sculpt brush', 'Grab pulls the outline · Inflate / Pinch push while held · Smooth evens it out.', '', { open:false });
     slider(s3, 'Size', () => ui.brush, v => ui.brush = v, .04, .5, .01, pct);
     slider(s3, 'Strength', () => ui.strength, v => ui.strength = v, .1, 1, .01, pct);
     if (lamp) { const s4 = section('Collar'); swatches(s4, ['#b8b5ae', '#d4b07a', '#2b2b2b', '#8c6b52'], state.collar, c => { state.collar = c; applyLook(); }); }
   }
   else if (ui.tab === 'surface') {
-    if (lamp && !parts().includes(ui.surf)) ui.surf = 'shade';
-    if (lamp && parts().length > 1) { const s0 = section('Part'); chips(s0, [['shade', 'Shade'], ['base', 'Base']], ui.surf, k => { ui.surf = k; renderPanel(); }); }
-    const k = lamp ? ui.surf : 'vessel', P = state[k];
+    if (!parts().includes(ui.surf)) ui.surf = parts()[0];
+    if (parts().length > 1) { const s0 = section('Part'); chips(s0, parts().map(k => [k, PART_NAMES(k)]), ui.surf, k => { ui.surf = k; renderPanel(); }); }
+    const k = ui.surf, P = state[k];
     patternControls(section('Pattern A', 'The base texture everywhere.', 'everywhere'), k, P);
     patternControls(section('Pattern B', 'Shows wherever you paint.', 'painted'), k, P.b);
     const st2 = section('Transition', 'Fade from pattern A into pattern B — up the height, or as a panel around the form. The blend is gradual, so the line stays continuous.', '', { open:P.tr.on, status:P.tr.on ? 'on' : 'off', on:P.tr.on });
@@ -1661,7 +1921,7 @@ function renderPanel() {
     slider(s2, 'Petals', () => P.lobes, v => P.lobes = v, 0, 12, 1, v => v || 'off', () => rebuild(k));
     slider(s2, 'Petal depth', () => P.lobeAmt, v => P.lobeAmt = v, 0, .25, .005, pct, () => rebuild(k));
     const s3 = section('Colour');
-    swatches(s3, k === 'base' ? ['#3b2622', '#2f2420', '#5a3b2c', '#ddd3c4', '#6b6258', '#8a5a3b'] : ['#ece3d6', '#f0d9b5', '#e8c8a8', '#d9d2c5', '#b88a6a', '#7f8f7a'], P.color, c => { P.color = c; applyLook(); });
+    swatches(s3, k === 'base' ? ['#3b2622', '#2f2420', '#5a3b2c', '#ddd3c4', '#6b6258', '#8a5a3b'] : ['#ece3d6', '#f0d9b5', '#e8c8a8', '#d9d2c5', '#b88a6a', '#7f8f7a', '#c96a3b', '#8fb8e8'], P.color, c => { P.color = c; applyLook(); });
   }
   else if (ui.tab === 'lamp') renderLamp();
   else if (ui.tab === 'print') renderPrint();
@@ -1670,17 +1930,19 @@ function renderPanel() {
     const st = el('div', { className:'stack' });
     const b2 = el('button', { textContent:'Save design (.json)' }); b2.onclick = () => { flushMasks(); saveFile('monoline-design.json', new Blob([JSON.stringify(state)], { type:'application/json' })); };
     const b3 = el('button', { textContent:'Load design…' }); b3.onclick = () => $('#fileIn').click();
-    const b4 = el('button', { textContent:'Start over' }); b4.onclick = () => { pushUndo(); const pr = state.print; loadState(defaultState()); state.print = pr; rebuild(); applyLook(); frameCamera(); renderAll(); toast('Reset'); };
-    st.append(b2, b3, b4); s.append(st);
+    const b5 = el('button', { textContent:'Share a link to this design…' }); b5.onclick = () => $('#shareBtn').onclick();
+    const b6 = el('button', { textContent:'Reset to how this piece started' }); b6.onclick = () => $('#resetBtn').onclick();
+    const b4 = el('button', { textContent:'New piece…' }); b4.onclick = () => showStart(true);
+    st.append(b2, b3, b5, b6, b4); s.append(st);
   }
 }
 let lastChecks = null;
 function renderLamp() {
   const L = state.lamp, re = () => { rebuild(); frameCamera(); renderPanel(); };
   const s1 = section('Layout', 'How the shade, socket and bulb fit together.');
-  chips(s1, Object.entries(LAYOUTS).map(([k, n]) => [k, n]), L.layout, k => { pushUndo(); L.layout = k;
+  chips(s1, [['bell', 'Table lamp · shade and base'], ['own', 'Shade only · for a lamp you own'], ['pendant', 'Pendant · shade for a cord set']], L.layout === 'pendant' ? 'pendant' : L.own ? 'own' : 'bell', k => { pushUndo(); L.layout = k === 'pendant' ? 'pendant' : 'bell'; L.own = k === 'own';
     makePrintable('shade'); fitToFitting();
-    if (!parts().includes(ui.surf)) ui.surf = 'shade'; if (k === 'pendant') state.print.part = 'shade'; re(); });
+    if (!parts().includes(ui.surf)) ui.surf = 'shade'; re(); });
   const s2 = section('Fitting & bulb', 'Real sizes. The shade opening can be fitted to the socket’s shade ring.');
   const fits = ['e27', 'e14'];
   chips(s2, fits.map(k => [k, FITTINGS[k].name]), L.fitting, k => { pushUndo(); L.fitting = k; L.bulb = Object.keys(BULBS).find(b => BULBS[b].fit === k); makePrintable('shade'); fitToFitting(); re(); });
@@ -1690,7 +1952,12 @@ function renderLamp() {
   toggle(s2, 'Show socket & bulb', L.hw, v => { L.hw = v; drawHardware(); requestRender(); });
   if (L.layout !== 'dome') { const b = el('button', { textContent:`Fit shade opening to ${FITTINGS[L.fitting].name} (Ø${FITTINGS[L.fitting].hole})`, style:'margin-top:6px' }); b.onclick = () => { pushUndo(); makePrintable('shade'); fitToFitting(); rebuild(); renderPanel(); toast('Opening fitted to the shade ring'); }; s2.append(b); }
   const sa = section('Assembly', 'How the printed parts and the hardware go together.');
-  const steps = L.layout === 'bell'
+  const steps = L.layout === 'bell' && L.own
+    ? [`You need: your lamp. Its ${FITTINGS[L.fitting].name.replace(' socket', '')} socket must have an outer thread and a shade ring (most table and floor lamps with a shade do).`,
+       'Unplug the lamp. Take out the bulb, unscrew the shade ring and lift off the old shade.',
+       'Slip the new shade’s bottom opening over the socket and screw the shade ring back on.',
+       'Screw in an LED bulb.']
+    : L.layout === 'bell'
     ? [`You need: an ${FITTINGS[L.fitting].name.replace(' socket', '')} lamp socket with an outer thread and shade ring, an M10×1 hollow threaded nipple (15–20 mm) with a nut, and a cord with plug and switch.`,
        `Print the base upside down (the G-code does this). Its top plate has a Ø${PLATE_HOLE} mm hole.`,
        'Push the nipple through the hole, tighten the nut from inside the base, and screw the socket onto the nipple with the cord running through it.',
@@ -1728,9 +1995,9 @@ function renderPrint() {
   const s3 = section('Filament');
   chips(s3, Object.entries(FILAMENTS).map(([k, f]) => [k, f.name]), pr.filament, k => { pushUndo(); pr.filament = k; rr(); });
   const s4 = section('What to print');
+  if (parts().length > 1) chips(s4, parts().map(k => [k, PART_NAMES(k)]), printPart(), k => { pr.part = k; clearPath(); renderPanel(); });
   if (lamp) {
-    if (parts().length > 1) chips(s4, [['shade', 'Shade'], ['base', 'Base']], pr.part, k => { pr.part = k; clearPath(); renderPanel(); });
-    if (pr.part === 'shade') { s4.append(el('div', { className:'sub', textContent:'Shade orientation on the bed' })); chips(s4, [['rim', 'Rim down'], ['top', 'Top down']], pr.orient, k => { pushUndo(); pr.orient = k; clearPath(); renderPanel(); }); }
+    if (printPart() === 'shade') { s4.append(el('div', { className:'sub', textContent:'Shade orientation on the bed' })); chips(s4, [['rim', 'Rim down'], ['top', 'Top down']], pr.orient, k => { pushUndo(); pr.orient = k; clearPath(); renderPanel(); }); }
   }
   if (printPart() !== 'shade') slider(s4, 'Solid bottom layers', () => pr.bottom, v => pr.bottom = v, 0, 10, 1, v => `${v} · ${(v * pr.layerH).toFixed(1)} mm`);
   toggle(s4, 'Auto bed leveling (footprint)', pr.abl, v => pr.abl = v);
@@ -1744,6 +2011,11 @@ function renderPrint() {
     const fix = el('button', { textContent:'Ease overhangs automatically', style:'margin-top:8px' });
     fix.onclick = () => { pushUndo(); makePrintable(k); rebuild(k); renderPanel(); toast('Silhouette eased'); };
     sc.append(fix);
+  }
+  if (lastChecks.some(c => c.lvl === 'bad' && /saucer/.test(c.msg))) {
+    const fs = el('button', { textContent:'Match saucer to pot', style:'margin-top:8px' });
+    fs.onclick = () => { pushUndo(); state.planter.auto = true; rebuild(); renderPanel(); toast('Saucer matched to the pot'); };
+    sc.append(fs);
   }
   if (lastChecks.some(c => c.lvl !== 'ok' && /Texture moves/.test(c.msg))) {
     const fx = el('button', { textContent:'Fit texture depth to this nozzle', style:'margin-top:8px;margin-left:6px' });
@@ -1765,18 +2037,18 @@ function renderPrint() {
   const st = el('div', { className:'stack' });
   const bp = el('button', { textContent:pathLine ? 'Hide toolpath' : 'Preview toolpath (the one line)' });
   bp.onclick = () => busy(() => { if (pathLine) { clearPath(); requestRender(); } else { const tp = showPath(); toast(`${tp.revs} spiral laps, ${tp.X.filter((_, i) => tp.K[i]).length} travel moves`); } renderPanel(); });
-  const pn = { shade:'shade', base:'base', vessel:'vessel' };
+  const pn = { shade:'shade', base:'base', vessel:state.planter.on ? 'pot' : 'vessel', saucer:'saucer' };
   st.append(bp);
   for (const kk of parts()) {
     const bg = el('button', { className:kk === k ? 'primary' : '', textContent:`G-code · ${pn[kk]} (${PRINTERS[pr.printer].name}, ${pr.nozzle} mm)` });
     bg.onclick = () => busy(async () => {
       if (checks(kk).some(c => c.lvl === 'bad')) toast('Heads up: ' + pn[kk] + ' has red printability issues');
-      await saveFile(`${kk}-${pr.printer}-${pr.nozzle}mm.gcode`, new Blob([gcode(kk).text], { type:'text/plain' }), true);
+      await saveFile(`${pn[kk]}-${pr.printer}-${pr.nozzle}mm.gcode`, new Blob([gcode(kk).text], { type:'text/plain' }), true);
     });
     const bs = el('button', { textContent:`STL · ${pn[kk]}` }); bs.onclick = () => busy(() => exportSTL(kk));
     st.append(bg, bs);
   }
-  if (lamp) { const ba = el('button', { textContent:'Everything · shade + base G-code & STL (.zip)' }); ba.onclick = () => busy(exportAll); st.append(ba); }
+  if (parts().length > 1) { const ba = el('button', { textContent:`Everything · ${parts().map(k => pn[k]).join(' + ')} G-code & STL (.zip)` }); ba.onclick = () => busy(exportAll); st.append(ba); }
   se.append(st);
   se.append(el('div', { className:'note', innerHTML:
     `<b>Printing the G-code:</b> copy the file to the printer's microSD card (or send it over LAN/FTP), load ${FILAMENTS[pr.filament].name} and check a <b>${pr.nozzle} mm</b> nozzle is fitted, then start it from the printer screen. It uses a simplified start sequence, so open it in a G-code viewer first.<br><br>` +
@@ -1804,7 +2076,7 @@ $('#imgIn').onchange = async e => {
 };
 $('#fileIn').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
-  try { const d = JSON.parse(await f.text()); if (!d.shade?.prof && !d.vessel?.prof) throw 0; pushUndo(); loadState(d); rebuild(); applyLook(); frameCamera(); renderAll(); toast('Design loaded'); }
+  try { const d = JSON.parse(await f.text()); if (!d.shade?.prof && !d.vessel?.prof) throw 0; pushUndo(); loadState(d); for (const k of parts()) if (state[k].tr.on && !state[k].mask) applyTransition(k); ui.started = true; showStart(false); markOrigin(); rebuild(); applyLook(); frameCamera(); renderAll(); toast('Design loaded'); }
   catch (err) { toast('That file isn’t a Monoline design'); }
   e.target.value = '';
 };
@@ -1842,7 +2114,7 @@ function zip(files) {
   return new Blob([...out, ...central, new Uint8Array(e.buffer)], { type:'application/zip' });
 }
 function stlOf(k) { const g = buildPart(k, null, true); const d = stlFromGeometry(g); g.dispose(); return d; }
-const readme = () => new TextEncoder().encode(`Monoline export\n\nUnits: millimetres. Each STL is a closed solid.\nBambu Studio: import, enable "Spiral vase" (Others > Special mode), choose the ${state.print.nozzle} mm nozzle, slice, print.\nShade: set bottom shell layers to 0 (it is open at both ends).\nBase: print it upside down so the solid plate is at the top of the lamp, and drill a 10.5 mm hole in its centre for the socket's M10 nipple (the G-code already leaves this hole).\nG-code files are made for ${PRINTERS[state.print.printer].name}, ${state.print.nozzle} mm nozzle, ${FILAMENTS[state.print.filament].name}. Copy to the printer's microSD card and start from the printer screen.\n`);
+const readme = () => new TextEncoder().encode(`Monoline export\n\nUnits: millimetres. Each STL is a closed solid.\nBambu Studio: import, enable "Spiral vase" (Others > Special mode), choose the ${state.print.nozzle} mm nozzle, slice, print.\nShade: set bottom shell layers to 0 (it is open at both ends).\nBase: print it upside down so the solid plate is at the top of the lamp, and drill a 10.5 mm hole in its centre for the socket's M10 nipple (the G-code already leaves this hole).\nPlanter: the G-code leaves the drainage hole open; in an STL print, drill it afterwards.\nG-code files are made for ${PRINTERS[state.print.printer].name}, ${state.print.nozzle} mm nozzle, ${FILAMENTS[state.print.filament].name}. Copy to the printer's microSD card and start from the printer screen.\n`);
 async function exportSTL(k) {
   flushMasks();
   await saveFile(`${k}.stl`, new Blob([stlOf(k)], { type:'model/stl' }), true);
@@ -1875,16 +2147,19 @@ async function saveFile(name, blob, wrapIfNeeded = false) {
 
 /* ═════════════════════ go ═════════════════════ */
 normalizeLamp();
-for (const k of ['shade', 'base', 'vessel']) if (state[k].tr.on && !state[k].mask) applyTransition(k);   // presets carry their transition as settings
+for (const k of PARTS) if (state[k].tr.on && !state[k].mask) applyTransition(k);   // presets carry their transition as settings
+ui.cat = 'all'; ui.started = hadSaved;
+try { origin = localStorage.getItem('monoline.origin'); } catch (e) {}
+if (!origin) { flushMasks(); origin = JSON.stringify(state); }
 $('#status').onclick = () => { ui.tab = TABS_FOR().includes(statusTab) ? statusTab : 'print'; ui.fold = { ...ui.fold }; renderTabs(); renderPanel(); openPanel(true); const c = [...document.querySelectorAll('#body .sec h3')].find(h => /Printability|Engineering/.test(h.textContent)); c?.scrollIntoView({ block:'start' }); };
 $('#fitBtn').onclick = () => frameCamera();
 const help = $('#help'), showHelp = v => help.classList.toggle('show', v);
 $('#helpBtn').onclick = () => showHelp(true);
 $('#helpClose').onclick = () => { showHelp(false); try { localStorage.setItem('monoline.help', '1'); } catch (e) {} };
 help.addEventListener('click', e => { if (e.target === help) $('#helpClose').onclick(); });
-try { if (!localStorage.getItem('monoline.help')) showHelp(true); } catch (e) {}
 renderAll(); setTool('grab'); syncUndo(); document.body.classList.toggle('drawing', state.view === 'drawing'); if (state.view === 'drawing') setTimeout(renderDrawing, 50);
 rebuild(); applyLook(); resize(); frameCamera();
+if (/^#d=/.test(location.hash)) openShared(); else if (!hadSaved) showStart(true);
 </script>
 </body>
 </html>
