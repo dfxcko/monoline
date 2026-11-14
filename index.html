@@ -222,6 +222,7 @@
   <button id="helpClose" class="on" style="padding:9px 18px">Start designing</button>
   <p class="lead" style="margin:16px 0 0;font-size:12px">Made by <a href="https://davidficko.com" style="color:inherit">David Ficko</a></p>
 
+
 </div></div>
 <div id="start"><div class="in">
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
@@ -247,6 +248,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const N = 41;                 // profile samples per part (v: 0 bottom → 1 top)
 const MW = 160, MH = 120;     // paint-mask resolution (θ × v); θ wraps → seamless
 const COLLAR_H = .07, TAU = Math.PI * 2, MM = 100; // 1 scene unit = 100 mm
+// One wall, one line: a line ~1.35× the nozzle is much stiffer than the usual 1.1× (stiffness grows with the cube of the wall) and still prints cleanly.
+const lineW = n => +Math.min(n * 1.35, n + .25).toFixed(2);
 const prof = f => Array.from({length:N}, (_, i) => +f(i / (N - 1)).toFixed(4));
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const pat = (tex, amp, freq, layers, twist = 0) => ({ tex, amp, freq, layers, twist });
@@ -262,81 +265,41 @@ const PLAIN = () => pat('smooth', 0, 40, 20);
 const STEM = () => part(1.2, prof(v => .2), PLAIN(), PLAIN(), '#b8b5ae');   // stands in for the lamp you already own
 const SAUCER0 = c => part(.16, prof(v => .5), PLAIN(), PLAIN(), c || '#c96a3b');
 
+// A small set of pieces, each checked so every layer rests on the one below at 0.4, 0.6 and 0.8 mm nozzles.
 const LAMP_PRESETS = {
-  // ── finished pieces ──
-  lantern:{ studio:true, name:'Lantern', note:'Net that swells open · knurled foot', lamp:{ layout:'bell', fitting:'e27', bulb:'a60', watts:6 },
-    shade:part(1.7, prof(v => (22.2 + 58 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.4, holeH:2.4, holeH2:5.6, grad:'swell', rim:8 }),
-    base: part(.6, prof(v => .6 - .3 * Math.pow(v, 1.2)), pat('knurl', .0035, 52, 16, .22), pat('smooth', 0, 40, 20), '#2f4fb5') },
-  ember:{ studio:true, name:'Ember', note:'Bedside · bumps melt into smooth', lamp:{ layout:'bell', fitting:'e14', bulb:'p45', watts:4 },
-    shade:part(1.1, prof(v => (15.8 + 50 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('knurl', .0035, 60, 30, .18), pat('smooth', 0, 40, 20), '#ef7d5a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.68, soft:.16 }),
-    base: part(.6, prof(v => .54 - .3 * Math.pow(v, 1.3)), pat('rings', .004, 40, 14), pat('smooth', 0, 40, 20), '#a9d6b8') },
+  ember:{ studio:true, name:'Ember', note:'Bedside lamp · knurl melting into smooth · E14', lamp:{ layout:'bell', fitting:'e14', bulb:'p45', watts:4 },
+    shade:part(1.1, prof(v => (15.8 + 50 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('knurl', .0025, 56, 26, .18), PLAIN(), '#ef7d5a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.62, soft:.16 }),
+    base: part(.6, prof(v => .52 - .26 * Math.pow(v, 1.3)), pat('rings', .003, 40, 14), PLAIN(), '#a9d6b8') },
+  lantern:{ studio:true, name:'Lantern', note:'Table lamp · net that opens towards the middle', lamp:{ layout:'bell', fitting:'e27', bulb:'a60', watts:6 },
+    shade:part(1.6, prof(v => (24 + 55 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), PLAIN(), PLAIN(), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.4, holeH:2.4, holeH2:4.8, grad:'swell', rim:8 }),
+    base: part(.6, prof(v => .58 - .28 * Math.pow(v, 1.2)), pat('ribs', .004, 52, 16), PLAIN(), '#2f4fb5') },
   sash:{ studio:true, name:'Sash', note:'Pendant · a knurled ribbon winds through ribs', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
-    shade:part(1.9, prof(v => (22.2 + 94 * Math.pow(1 - v, .74)) / MM), pat('ribs', .005, 72, 20, .2), pat('knurl', .0035, 72, 44, .2), '#c96a3b', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }),
-    base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#c96a3b') },
+    shade:part(1.8, prof(v => (22.2 + 88 * Math.pow(1 - v, .74)) / MM), pat('ribs', .004, 64, 20, .2), pat('knurl', .003, 64, 40, .2), '#c96a3b', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }), base:STEM() },
   pleat:{ studio:true, name:'Pleat', note:'Pendant · deep pleats · fits any cord set', lamp:{ layout:'pendant', fitting:'e27', bulb:'a60', watts:6 },
-    shade:part(1.5, prof(v => (22.2 + 90 * Math.pow(1 - v, .85)) / MM), pat('ribs', .007, 36, 20), PLAIN(), '#f3ead8'), base:STEM() },
+    shade:part(1.5, prof(v => (22.2 + 88 * Math.pow(1 - v, .85)) / MM), pat('ribs', .006, 32, 20), PLAIN(), '#f3ead8'), base:STEM() },
   tulip:{ studio:true, name:'Tulip', note:'New shade for a table lamp you own', lamp:{ layout:'bell', own:true, fitting:'e27', bulb:'a60', watts:6 },
-    shade:part(1.5, prof(v => (22.2 + 62 * Math.sin(Math.PI * .78 * Math.pow(v, .6))) / MM), pat('woven', .004, 44, 30), PLAIN(), '#f1d98a'), base:STEM() },
-  carre:{ name:'Carré', note:'Soft-square shade for a lamp you own', lamp:{ layout:'bell', own:true, fitting:'e27', bulb:'a60', watts:6 },
-    shade:part(1.4, prof(v => (22.2 + 70 * Math.pow(v, .62)) / MM), pat('rings', .003, 40, 36), PLAIN(), '#8fb8e8', 0, 0, {}, {}, {}, {}, { n:4, k:.8 }), base:STEM() },
-  bloom:{ name:'Bloom', note:'Petal shade for an E14 bedside lamp', lamp:{ layout:'bell', own:true, fitting:'e14', bulb:'p45', watts:4 },
-    shade:part(1.0, prof(v => (15.8 + 46 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('rings', .003, 40, 30), PLAIN(), '#ef7d5a', 6, .06), base:STEM() },
-  facet:{ name:'Facet', note:'Six-sided pendant shade', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
-    shade:part(1.6, prof(v => (22.2 + 96 * Math.pow(1 - v, .8)) / MM), pat('rings', .003, 40, 40), PLAIN(), '#a9d6b8', 0, 0, {}, {}, {}, {}, { n:6, k:.8 }), base:STEM() },
-  globe:{ name:'Globe', note:'E27 bulb, shade on socket ring', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
-    shade:part(1.6, prof(v => { const z = v * 160; return Math.min(22.2 + z * .95, 75, 35 + (160 - z) * .95) / MM; }), pat('rings', .004, 40, 24), pat('woven', .004, 40, 24), '#f2efe8'),
-    base: part(.55, prof(v => .58 - .28 * v), pat('ribs', .01, 56, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
-  pendant:{ name:'Pendant', note:'E27, hangs from the cord', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95' },
-    shade:part(1.7, prof(v => Math.min(22.2 + (1 - v) * 170 * .95, 118) / MM), pat('ribs', .008, 64, 20), pat('woven', .005, 40, 16), '#efe9df'),
-    base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#efe9df') },
-  net:{ name:'Net', note:'Up/down holes, E27 bulb', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
-    shade:part(1.5, prof(v => { const z = v * 150; return Math.min(22.2 + z * .95, 72, 40 + (150 - z) * .7) / MM; }), pat('smooth', 0, 40, 20), pat('ribs', .006, 48, 20), '#f2efe8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.4, holeH:5, holeH2:8, rim:6 }),
-    base: part(.55, prof(v => .58 - .28 * v), pat('ribs', .01, 56, 20), pat('rings', .005, 40, 14), '#1e1d1b') },
-  mesh:{ name:'Mesh pendant', note:'Open lattice dome, E27', lamp:{ layout:'pendant', fitting:'e27', bulb:'a60' },
-    shade:part(1.5, prof(v => (22.2 + 86 * Math.sin((1 - v) * Math.PI / 2)) / MM), pat('smooth', 0, 40, 20), pat('ribs', .006, 48, 20), '#f2efe8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.6, lobes:40, rings:1, bumps:2, rim:5 }),
-    base: part(.6, prof(v => .2), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#f2efe8') },
-  mushroom:{ name:'Mushroom', note:'Low cap on a fluted foot, E27', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
-    shade:part(1.25, prof(v => (22.2 + 66 * Math.sin(Math.PI * .8 * Math.pow(v, .55))) / MM), pat('woven', .005, 40, 16), pat('ribs', .008, 60, 16), '#ece3d6'),
-    base: part(.7, prof(v => .28 + .34 * Math.pow(1 - v, 1.8)), pat('ribs', .012, 48, 20), pat('rings', .005, 40, 14), '#3b2622') },
-  cone:{ name:'Cone', note:'Flared uplight shade, E27', lamp:{ layout:'bell', fitting:'e27', bulb:'a60' },
-    shade:part(1.3, prof(v => (22.2 + 72 * Math.pow(v, .7)) / MM), pat('rings', .005, 40, 16), pat('woven', .005, 40, 16), '#efe6d8'),
-    base: part(.6, prof(v => .62 - .32 * v), pat('ribs', .01, 64, 20), pat('diamond', .005, 28, 14), '#ddd3c4') },
+    shade:part(1.5, prof(v => (22.2 + 62 * Math.sin(Math.PI * .78 * Math.pow(v, .6))) / MM), pat('woven', .0025, 40, 30), PLAIN(), '#f1d98a'), base:STEM() },
+  carre:{ studio:true, name:'Carré', note:'Soft-square shade for a lamp you own', lamp:{ layout:'bell', own:true, fitting:'e27', bulb:'a60', watts:6 },
+    shade:part(1.4, prof(v => (22.2 + 72 * Math.pow(v, .62)) / MM), pat('rings', .002, 40, 36), PLAIN(), '#8fb8e8', 0, 0, {}, {}, {}, {}, { n:4, k:.75 }), base:STEM() },
 };
 const VESSEL_PRESETS = {
-  // ── finished pieces ──
-  helix:{ studio:true, name:'Helix vase', note:'Knurled ribbon spiralling up a coiled wall',
-    vessel:part(1.8, prof(v => .3 + .1 * Math.sin(v * Math.PI * 1.1 - .3) - .04 * v), pat('rings', .004, 40, 60), pat('knurl', .0035, 56, 60, .3), '#a9a4e0', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }) },
-  tide:{ studio:true, name:'Tide bowl', note:'Three soft corners · wavy rim · knurl',
-    vessel:part(.7, prof(v => .42 + .4 * Math.pow(Math.sin(v * Math.PI / 2), 1.2)), pat('knurl', .0035, 96, 22, .15), pat('smooth', 0, 40, 20), '#f1d98a', 3, .03, { rim:4, waves:6 }) },
-  sieve:{ studio:true, name:'Sieve basket', note:'Solid foot · holes open toward the rim',
-    vessel:part(.8, prof(v => .5 + .3 * Math.sin(v * Math.PI / 2)), pat('smooth', 0, 40, 20), pat('smooth', 0, 40, 20), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.2, holeH:2.4, holeH2:5.4, grad:'linear', rim:6 }) },
-  terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
-    vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .004, 40, 36), PLAIN(), '#c96a3b') },
-  quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
-    vessel:part(1.0, prof(v => .46 + .14 * Math.pow(v, .8)), PLAIN(), pat('knurl', .0035, 64, 30), '#7f8f7a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.55, soft:.12 }, { n:4, k:.75 }) },
+  helix:{ studio:true, cat:'vase', name:'Helix vase', note:'Knurled ribbon spiralling up a coiled wall',
+    vessel:part(1.8, prof(v => .3 + .1 * Math.sin(v * Math.PI * 1.1 - .3) - .04 * v), pat('rings', .0035, 40, 60), pat('knurl', .003, 56, 60, .3), '#a9a4e0', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }) },
   twist:{ studio:true, cat:'vase', name:'Twist vase', note:'Square foot turning into a round lip',
-    vessel:part(1.8, prof(v => .34 + .05 * Math.sin(v * Math.PI) - .04 * v), pat('rings', .003, 40, 70), PLAIN(), '#8fb8e8', 0, 0, {}, {}, {}, {}, { n:4, k:.85, n2:0, twist:1 }) },
-  herb:{ cat:'planter', name:'Herb trough', note:'Oval pot for the windowsill · saucer', planter:{ on:true, hole:8 },
-    vessel:part(.8, prof(v => .75 + .1 * v), pat('ribs', .006, 48, 20), PLAIN(), '#ddd3c4', 0, 0, {}, {}, {}, {}, { n:2, k:.62 }) },
-  bud:{ name:'Bud vase', note:'Round belly, narrow neck',
-    vessel:part(.95, prof(v => .12 + .25 * Math.exp(-(((v - .3) / .28) ** 2)) + .05 * smooth(.8, 1, v)), pat('woven', .005, 28, 16), pat('ribs', .008, 32, 16), '#e7d9c4') },
-  tall:{ name:'Tall vase', note:'For dried stems',
-    vessel:part(1.7, prof(v => .2 + .17 * Math.exp(-(((v - .35) / .32) ** 2)) - .03 * v + .05 * smooth(.85, 1, v)), pat('ribs', .01, 48, 30, .25), pat('woven', .006, 36, 30), '#d8c7b0') },
-  bowl:{ name:'Bowl', note:'Open, gently flared',
-    vessel:part(.66, prof(v => .38 + .4 * Math.sin(v * Math.PI / 2)), pat('woven', .005, 56, 14), pat('rings', .006, 40, 12), '#efe6d8') },
-  knurl:{ name:'Knurl cup', note:'Bumps fading into smooth',
-    vessel:part(.9, prof(v => .3 + .05 * Math.sin(v * Math.PI * .9) - .02 * v), pat('smooth', 0, 60, 40), pat('knurl', .0035, 64, 30), '#c9372f', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.42, span:.55, soft:.04, slant:.1 }) },
-  netvase:{ name:'Net vase', note:'Perforated, up/down holes',
-    vessel:part(1.1, prof(v => .26 + .08 * Math.sin(v * Math.PI) - .02 * v), pat('smooth', 0, 40, 20), pat('rings', .005, 40, 20), '#e9e3d8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:4.8, holeH:4.8, holeH2:8, rim:10 }) },
-  tidevase:{ name:'Tide vase', note:'Non-planar wavy layers',
-    vessel:part(1.2, prof(v => .27 + .06 * Math.sin(v * Math.PI) - .03 * v), pat('smooth', 0, 40, 20), pat('rings', .005, 40, 20), '#d9cbb6', 0, 0, { mid:5, waves:2 }) },
-  crown:{ name:'Crown bowl', note:'Wavy rim, noise texture',
-    vessel:part(.7, prof(v => .36 + .36 * Math.sin(v * Math.PI / 2)), pat('ribs', .006, 48, 20), pat('woven', .005, 40, 14), '#efe2cf', 0, 0, { rim:4, waves:5 }, { src:'noise', target:'depth', strength:.7, noise:3 }) },
-  pot:{ name:'Petal pot', note:'Lobed tumbler',
-    vessel:part(.95, prof(v => .33 - .05 * v + .02 * smooth(.9, 1, v)), pat('ribs', .01, 56, 20), pat('diamond', .005, 28, 16), '#b88a6a', 8, .05) },
+    vessel:part(1.8, prof(v => .34 + .05 * Math.sin(v * Math.PI) - .04 * v), pat('rings', .003, 40, 70), PLAIN(), '#8fb8e8', 0, 0, {}, {}, {}, {}, { n:4, k:.8, n2:0, twist:.6 }) },
+  bud:{ studio:true, cat:'vase', name:'Bud vase', note:'Round belly, narrow neck, fine coil',
+    vessel:part(1.1, prof(v => .14 + .22 * Math.exp(-(((v - .32) / .34) ** 2)) + .04 * smooth(.8, 1, v)), pat('rings', .0025, 40, 40), PLAIN(), '#e7d9c4') },
+  tide:{ studio:true, cat:'bowl', name:'Tide bowl', note:'Three soft corners · knurl · rim rises at each corner',
+    vessel:part(.7, prof(v => .44 + .32 * Math.pow(Math.sin(v * Math.PI / 2), 1.2)), pat('knurl', .003, 88, 22, .15), PLAIN(), '#f1d98a', 3, .03, { rim:1.4, waves:3 }) },
+  sieve:{ studio:true, cat:'bowl', name:'Sieve basket', note:'Solid foot · holes open toward the rim',
+    vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.2, holeH:2.4, holeH2:4.8, grad:'linear', rim:6 }) },
+  terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
+    vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .0035, 40, 36), PLAIN(), '#c96a3b') },
+  quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
+    vessel:part(1.0, prof(v => .46 + .14 * Math.pow(v, .8)), PLAIN(), pat('knurl', .003, 64, 30), '#7f8f7a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.55, soft:.12 }, { n:4, k:.75 }) },
 };
 // make a shade's opening fit the socket's shade ring (bottom opening for table lamps, top opening for pendants)
-function fitProf(P, layout, fitting, w = .45, deg = 45) {
+function fitProf(P, layout, fitting, w = lineW(.4), deg = 40) {
   const F = FITTINGS[fitting] || FITTINGS.e27, target = (F.hole / 2 + w / 2) / MM, a = layout === 'bell' ? 0 : N - 1, dir = a ? -1 : 1;
   const maxD = Math.tan(deg * Math.PI / 180) * (P.h / (N - 1)), pr = P.prof;
   pr[a] = +target.toFixed(4);
@@ -349,16 +312,15 @@ function easeSlope(P, deg = 45) {
   for (let i = iMax + 1; i < N; i++) pr[i] = +Math.min(Math.max(pr[i], pr[i - 1] - maxD), pr[i - 1] + maxD).toFixed(4);
   for (let i = iMax - 1; i >= 0; i--) pr[i] = +Math.min(Math.max(pr[i], pr[i + 1] - maxD), pr[i + 1] + maxD).toFixed(4);
 }
-for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k]) easeSlope(p[k]);
-{ const VCAT = { tide:'bowl', sieve:'bowl', bowl:'bowl', crown:'bowl' }; for (const [k, p] of Object.entries(VESSEL_PRESETS)) p.cat = p.cat || VCAT[k] || 'vase'; }
+for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k]) easeSlope(p[k], 40);
 
 const PRINTERS = {
-  a1mini:{ name:'A1 mini', bed:[180,180], maxZ:180, park:[10,170], purgeY:4 },
-  a1:{ name:'A1', bed:[256,256], maxZ:256, park:[10,250], purgeY:4 },
-  p1s:{ name:'P1S / P1P', bed:[256,256], maxZ:250, park:[65,245], purgeY:4 },
-  x1c:{ name:'X1C / X1E', bed:[256,256], maxZ:250, park:[65,245], purgeY:4 },
-  p2s:{ name:'P2S', bed:[256,256], maxZ:256, park:[65,245], purgeY:4 },
-  a2l:{ name:'A2L', bed:[330,320], maxZ:325, park:[10,310], purgeY:4 },
+  a1mini:{ name:'A1 mini', bed:[180,180], maxZ:180, zSpeed:10, park:[10,170], purgeY:4 },
+  a1:{ name:'A1', bed:[256,256], maxZ:256, zSpeed:10, park:[10,250], purgeY:4 },
+  p1s:{ name:'P1S / P1P', bed:[256,256], maxZ:250, zSpeed:10, park:[65,245], purgeY:4 },
+  x1c:{ name:'X1C / X1E', bed:[256,256], maxZ:250, zSpeed:10, park:[65,245], purgeY:4 },
+  p2s:{ name:'P2S', bed:[256,256], maxZ:256, zSpeed:10, park:[65,245], purgeY:4 },
+  a2l:{ name:'A2L', bed:[330,320], maxZ:325, zSpeed:10, park:[10,310], purgeY:4 },
 };
 const FILAMENTS = {
   pla:{ name:'PLA', nozzle:220, bed:55, fan:100, flow:18, soft:55, rho:1.24 },
@@ -386,15 +348,14 @@ const ringH = F => (F.h - 18) / MM;   // height of the socket's shade ring above
 const PLATE_HOLE = 10.5;             // mm, hole in the base's top plate for an M10 threaded nipple
 const PEND_Y = .55;
 const LAMP0 = () => ({ layout:'bell', own:false, fitting:'e27', bulb:'a60', watts:6, hw:true });
-for (const p of Object.values(LAMP_PRESETS)) { fitProf(p.shade, p.lamp.layout, p.lamp.fitting); easeSlope(p.shade, 44); }   // every lamp's opening fits its socket
-const lineW = n => +(n * 1.12).toFixed(2);
+for (const p of Object.values(LAMP_PRESETS)) { fitProf(p.shade, p.lamp.layout, p.lamp.fitting); easeSlope(p.shade, 40); }   // every lamp's opening fits its socket
 
 const clone = o => JSON.parse(JSON.stringify(o));
 function defaultState() {
   const L = LAMP_PRESETS.ember, V = VESSEL_PRESETS.helix;
-  return { v:5, view:'path', risks:true, mode:'lamp', preset:'ember', vpreset:'helix', shade:clone(L.shade), base:clone(L.base), vessel:clone(V.vessel), saucer:SAUCER0(), planter:PLANTER0(),
+  return { v:6, view:'path', risks:true, mode:'lamp', preset:'ember', vpreset:'helix', shade:clone(L.shade), base:clone(L.base), vessel:clone(V.vessel), saucer:SAUCER0(), planter:PLANTER0(),
     collar:'#b8b5ae', light:{ on:false, power:1, warmth:.35 }, lamp:{ ...LAMP0(), ...L.lamp },
-    print:{ printer:'x1c', nozzle:.4, filament:'pla', layerH:.2, speed:90, orient:'rim', bottom:4, abl:true, part:'shade', layerLines:true, customStart:'' } };
+    print:{ printer:'x1c', nozzle:.4, filament:'pla', layerH:.2, speed:60, orient:'auto', brim:'auto', bottom:4, abl:true, part:'shade', layerLines:true, customStart:'' } };
 }
 function upgrade(s) {
   const d = defaultState();
@@ -406,7 +367,8 @@ function upgrade(s) {
     if (o[k].prof.length !== N) o[k].prof = d[k].prof;
   }
   if (!s.v || s.v < 4) o.view = 'path';
-  o.v = 5;
+  if (!s.v || s.v < 6) { o.print.orient = 'auto'; o.print.brim = 'auto'; const sp = { .4:90, .6:70, .8:50 }, ns = { .4:60, .6:50, .8:40 }; if (o.print.speed === sp[o.print.nozzle]) o.print.speed = ns[o.print.nozzle]; }
+  o.v = 6;
   for (const k of PARTS) if (o[k].mod.target !== 'lift') o[k].mod.target = 'depth';
   for (const k of PARTS) { const M = o[k].mesh; if (M && M.mode === 'zwave' && !(s[k]?.mesh?.holeW)) { M.holeW = +(Math.PI * Math.max(...o[k].prof) * MM / Math.max(6, M.lobes)).toFixed(1); M.holeH = +(M.amp * 4).toFixed(1); } }
   return o;
@@ -502,7 +464,7 @@ function disp(P, th, v, m) {
   GLOW = ga + (gb - ga) * w;
   return a + (b - a) * w;
 }
-const rimFade = v => Math.min(1, Math.min(v, 1 - v) * 40);
+const rimFade = (v, P) => Math.min(1, Math.min(v, 1 - v) * (P ? P.h * MM / 8 : 40));
 const keyOf = P => P === state.shade ? 'shade' : P === state.base ? 'base' : P === state.saucer ? 'saucer' : 'vessel';
 // Modulation field (0..1) after the book's "attractor" and "Image Sampler" strategies.
 const imgCache = {}, noiseCache = {};
@@ -595,17 +557,17 @@ function meshMM(P, th, lap, zMM, Hmm) {
 const isZW = P => !!(P.mesh && P.mesh.on && P.mesh.mode === 'zwave');
 // Net hole size (mm) → number of waves around (hole width = half a wave at the widest point) and wave amplitude (hole ≈ 4 × amplitude tall)
 const zwN = P => Math.min(120, Math.max(6, Math.round(Math.PI * Math.max(...P.prof) * MM / Math.max(1, P.mesh.holeW))));
-function zwHoleH(P, z, Hmm) { // hole height (mm) at a height, following the chosen gradient
-  const M = P.mesh, u = Math.min(1, Math.max(0, (z - M.rim) / Math.max(1, Hmm - 2 * M.rim)));
+function zwHoleH(P, z, Hmm, flip = false) { // hole height (mm) at a height, following the chosen gradient
+  const M = P.mesh, u0 = Math.min(1, Math.max(0, (z - M.rim) / Math.max(1, Hmm - 2 * M.rim))), u = flip ? 1 - u0 : u0;
   if (M.grad === 'linear') return M.holeH + (M.holeH2 - M.holeH) * u;
   if (M.grad === 'swell') return M.holeH + (M.holeH2 - M.holeH) * Math.sin(Math.PI * u);
   return M.holeH;
 }
-function zwTable(P, z0, lh, Hmm) {
+function zwTable(P, z0, lh, Hmm, flip = false) {
   const M = P.mesh, Z = [], A = [];
   // wave scales with the local radius, so the climb angle (and hole shape) stays even on narrow necks
   const rMax = Math.max(...P.prof);
-  const amp = z => zwHoleH(P, z, Hmm) / 4 * Math.max(0, Math.min(1, (z - M.rim) / 3, (Hmm - M.rim - z) / 3)) * (M.follow ? sampleProf(P.prof, Math.min(1, Math.max(0, z / Hmm))) / rMax : 1);
+  const amp = z => { const v = Math.min(1, Math.max(0, z / Hmm)); return zwHoleH(P, z, Hmm, flip) / 4 * Math.max(0, Math.min(1, (z - M.rim) / 3, (Hmm - M.rim - z) / 3)) * (M.follow ? sampleProf(P.prof, flip ? 1 - v : v) / rMax : 1); };
   let aPrev = 0;
   for (let L = 0; L < 40000; L++) {
     const base = L === 0 ? z0 + lh : Z[L - 1] + lh + aPrev;
@@ -624,7 +586,7 @@ function zwAt(tb, t, th, N, lh) {
 }
 const meshLap = (P, t, th) => Math.floor(t - Math.PI / (2 * Math.max(4, Math.round(P.mesh.lobes))) / TAU);
 // outer surface radius (scene units)
-function surfR(P, th, v, m) { const d = disp(P, th, v, m); return Math.max(.02, sampleProf(P.prof, v) * lobeF(P, th, v) + d * rimFade(v) * (d ? depthMul(P, th, v) : 1)); }
+function surfR(P, th, v, m) { const d = disp(P, th, v, m); return Math.max(.02, sampleProf(P.prof, v) * lobeF(P, th, v) + d * rimFade(v, P) * (d ? depthMul(P, th, v) : 1)); }
 
 function resFor(P) {
   const tex = [P.tex, P.b.tex], amp = Math.max(P.amp, P.b.amp);
@@ -1111,10 +1073,25 @@ stage.addEventListener('pointerleave', () => { if (!drag) showBrush(null); });
 /* ═════════════════════ toolpath (single continuous spiral) ═════════════════════ */
 // Returns typed arrays in printer space (mm, origin = bed centre) plus a parallel array
 // of model-space y for the preview. Kind: 0 = extrude, 1 = travel.
+// Which end of a part goes on the bed. The base always prints upside down (its top plate on the bed).
+// A shade goes wider end down by default: a 40 mm opening is a poor foot for a 170 mm tall single wall.
+function shadeFlip() { const pr = state.print, P = state.shade; return pr.orient === 'top' || (pr.orient === 'auto' && sampleProf(P.prof, 1) > sampleProf(P.prof, 0) * 1.08); }
+const partFlip = k => k === 'base' || (k === 'shade' && shadeFlip());
+function brimMM(k) { // a brim widens the foot of single-wall parts so they cannot be knocked off or peel up
+  const pr = state.print; if (pr.brim !== 'auto') return +pr.brim || 0;
+  const P = state[k], foot = sampleProf(P.prof, partFlip(k) ? 1 : 0) * 2 * MM * minF(P), H = P.h * MM;
+  return k === 'shade' ? 6 : foot < H * .45 ? 4 : 0;
+}
+// Speeds (mm/s) for the parts of a perforated wall: strands in mid-air need time to set; contact points fuse at a moderate speed.
+const NET_SPEED = n => ({ air:n >= .8 ? 8 : n >= .6 ? 9 : 10, touch:n >= .8 ? 14 : n >= .6 ? 16 : 18 });
+// Returns arrays in printer space (mm, origin = bed centre). Kind: 0 = extrude, 1 = travel.
+// Feed rate is planned per point: it slows where a layer hangs out over the one below, where a strand crosses air,
+// where the nozzle climbs or dips (Z axis kept under its limit) and on very short segments. E always follows length,
+// so the line keeps one width whatever the speed.
 function toolpath(k) {
-  const pr = state.print, P = state[k], m = getMask(k);
+  const pr = state.print, P = state[k], m = getMask(k), printer = PRINTERS[pr.printer];
   const lh = pr.layerH, w = lineW(pr.nozzle), H = P.h * MM;
-  const flip = (k === 'shade' && pr.orient === 'top') || k === 'base';   // the base prints upside down: its top plate goes on the bed
+  const flip = partFlip(k);
   const vOf = z => { const v = Math.min(1, Math.max(0, z / H)); return flip ? 1 - v : v; };
   const R = (th, z) => surfR(P, flip ? -th : th, vOf(z), m) * MM - w / 2; // nozzle centre sits half a line inside the surface
   const fil = FILAMENTS[pr.filament];
@@ -1123,26 +1100,34 @@ function toolpath(k) {
   const segs = Math.min(1800, Math.max(240, Math.round(TAU * rMax / .7), maxSeg, isZW(P) ? zwN(P) * 24 : 0));
   const X = [], Y = [], Z = [], E = [], F = [], K = [];
   const area = (w - lh) * lh + Math.PI * (lh / 2) ** 2, eK = .98 / (Math.PI * .875 * .875);
+  const zLim = printer.zSpeed || 10, rateLim = 200;   // Z axis mm/s · G-code lines per second the printer can digest smoothly
   let px = 0, py = 0, pz = 0;
   const push = (x, y, z, kind, feed, flowScale = 1) => {
-    const d = Math.hypot(x - px, y - py, z - pz);
+    const d = Math.hypot(x - px, y - py, z - pz), dz = Math.abs(z - pz);
+    if (!kind && d > 1e-6) { if (dz > 1e-4) feed = Math.min(feed, zLim * d / dz); feed = Math.max(4, Math.min(feed, rateLim * d)); }
     X.push(x); Y.push(y); Z.push(z); K.push(kind); F.push(feed);
     E.push(kind ? 0 : d * area * eK * flowScale); px = x; py = y; pz = z;
   };
   const thM = th => flip ? -th : th;
   const W = (th, z) => { const w = warpMM(P, k, thM(th), vOf(z)); return flip ? -w : w; };  // non-planar offset in print space
 
-  const wallSpeed = Math.min(pr.speed, fil.flow / (w * lh));
+  const zw = isZW(P), mesh = P.mesh.on && !zw, NS = NET_SPEED(pr.nozzle);
+  const wallSpeed = Math.min(pr.speed, fil.flow / (w * lh)), minLayer = zw || mesh ? 8 : 6;
   // on a non-round outline the inward loops are offset square to the wall, not toward the centre, so they stay one line apart
   const body = (th, z) => { const v = vOf(z); return sampleProf(P.prof, v) * lobeF(P, flip ? -th : th, v) * MM; }, slant = new Float32Array(segs + 1);
+  const setSlant = zc => { for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, b = body(th, zc), db = (body(th + .002, zc) - body(th - .002, zc)) / .004; slant[s] = Math.min(2.2, Math.hypot(b, db) / b); } };
   const bottom = (k === 'shade') ? 0 : Math.max(0, Math.round(pr.bottom));
+  // 0) brim: loops outward from the foot on the first layer, printed outside-in so the last one touches the wall
+  const nBrim = Math.round(brimMM(k) / (w * .96));
+  if (nBrim) { setSlant(lh / 2);
+    for (let b = nBrim; b >= 1; b--) for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, lh / 2) + b * w * .96 * slant[s]; push(r * Math.cos(th), r * Math.sin(th), lh, b === nBrim && s === 0 ? 1 : 0, 25); } }
   // 1) solid bottom layers: outer loop + concentric loops inward, one continuous line per layer
   for (let L = 0; L < bottom; L++) {
-    const z = (L + 1) * lh, zc = z - lh / 2, feed = L === 0 ? 25 : 60;
-    let ring = 0, first = true;
+    const z = (L + 1) * lh, zc = z - lh / 2, feed = L === 0 ? 25 : 50;
+    let ring = 0, first = !(L === 0 && nBrim);
     while (true) {
       const off = ring * w * .96; let minR = Infinity; const pts = [];
-      if (!ring) for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, b = body(th, zc), db = (body(th + .002, zc) - body(th - .002, zc)) / .004; slant[s] = Math.min(2.2, Math.hypot(b, db) / b); }
+      if (!ring) setSlant(zc);
       for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, zc) - off * slant[s]; minR = Math.min(minR, r); pts.push([r * Math.cos(th), r * Math.sin(th)]); }
       if (minR < (k === 'base' ? PLATE_HOLE / 2 + w * .5 : k === 'vessel' && state.planter.hole > 0 ? state.planter.hole / 2 + w * .5 : w * .55)) break;   // leave the nipple hole (base plate) or drainage hole (pot) open
       pts.forEach((q, i) => push(q[0], q[1], z, first && i === 0 ? 1 : 0, feed));
@@ -1153,12 +1138,12 @@ function toolpath(k) {
   let z0 = bottom * lh;
   if (bottom === 0) {
     z0 = lh;
-    for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, lh / 2); push(r * Math.cos(th), r * Math.sin(th), lh, s === 0 ? 1 : 0, 20); }
+    for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, lh / 2); push(r * Math.cos(th), r * Math.sin(th), lh, s === 0 && !nBrim ? 1 : 0, 20); }
   } else {
     const r = R(0, z0 + lh / 2); push(r, 0, z0, 1, 120);
   }
   // 3) the spiral: z climbs continuously, one revolution per layer, never lifts or stops
-  const zw = isZW(P), tb = zw ? zwTable(P, z0 - lh, lh, H) : null, NW = zw ? zwN(P) : 0;
+  const tb = zw ? zwTable(P, z0 - lh, lh, H, flip) : null, NW = zw ? zwN(P) : 0;
   const revs = zw ? Math.max(1, tb.T) : Math.max(1, Math.floor((H - z0) / lh));
   const revLen = []; // for min layer time
   for (let rv = 0; rv < revs; rv++) {
@@ -1167,23 +1152,30 @@ function toolpath(k) {
     for (let s = 1; s <= 64; s++) { const th = s / 64 * TAU, r = R(th, zc); const x = r * Math.cos(th), y = r * Math.sin(th); len += Math.hypot(x - qx, y - qy); qx = x; qy = y; }
     revLen.push(len);
   }
+  const lapR = new Float32Array(segs + 1);   // where the lap below put its line, to see how far this one hangs out
+  for (let s = 0; s <= segs; s++) lapR[s] = R(s / segs * TAU, Math.max(lh / 2, z0 - lh / 2));
   for (let rv = 0; rv < revs; rv++) {
-    const feed = Math.max(8, Math.min(wallSpeed, revLen[rv] / 5)); // ≥5 s per layer so it can cool
+    const cap = Math.max(6, Math.min(wallSpeed, revLen[rv] / minLayer)); // every lap takes ≥ 6 s (8 s for perforated walls) so it can cool
     for (let s = 1; s <= segs; s++) {
       const t = rv + s / segs, th = s / segs * TAU;
-      if (zw) { // up/down net: same line width, the nozzle rides the wave and bridges between contacts
+      if (zw) { // up/down net: same line width, the nozzle rides the wave; slow where the strand crosses air, quicker where it lands on the lap below
         const q = zwAt(tb, t, thM(th), NW, lh), r = R(th, q.top - lh / 2);
-        push(r * Math.cos(th), r * Math.sin(th), q.top, 0, q.a > .05 ? Math.min(feed, 22) : feed, rv === 0 ? s / segs : 1);
+        const below = rv === 0 ? z0 : zwAt(tb, t - 1, thM(th), NW, lh).top, gap = q.top - below - lh;
+        const sup = 1 - smooth(.15 * lh, .8 * lh, gap), feed = Math.min(cap, NS.air + (NS.touch - NS.air) * sup);
+        push(r * Math.cos(th), r * Math.sin(th), q.top, 0, feed, rv === 0 ? s / segs : 1);
         continue;
       }
       const z = z0 + t * lh;
-      const mo = P.mesh.on ? meshMM(P, thM(th), meshLap(P, z / lh, thM(th)), flip ? H - (z - lh / 2) : z - lh / 2, H) : 0;
-      const r = R(th, z - lh / 2) + mo;
+      const mo = mesh ? meshMM(P, thM(th), meshLap(P, z / lh, thM(th)), flip ? H - (z - lh / 2) : z - lh / 2, H) : 0;
+      const r0 = R(th, z - lh / 2), r = r0 + mo;
+      const hang = Math.abs(r0 - lapR[s]) / w; lapR[s] = r0;   // sideways step from the lap below, in line widths
+      let feed = cap * (1 - .6 * smooth(.25, .55, hang));      // hanging layers print slower, like a slicer's overhang speed
+      if (mo > w * .3) feed = Math.min(feed, 15);              // a mesh bulge crosses air
       const wz = W(th, z), lhe = Math.max(lh * .3, lh + wz - W(th, z - lh));   // local layer height
-      push(r * Math.cos(th), r * Math.sin(th), z + wz, 0, mo > .05 ? Math.min(feed, 30) : feed, (rv === 0 ? s / segs : 1) * (lhe / lh)); // bulges bridge: slow down // first lap ramps up; E follows local layer height so width stays constant
+      push(r * Math.cos(th), r * Math.sin(th), z + wz, 0, feed, (rv === 0 ? s / segs : 1) * (lhe / lh)); // first lap ramps up; E follows local layer height so width stays constant
     }
   }
-  return { X, Y, Z, E, F, K, flip, H, lh, w, segs, revs, bottom, wallSpeed };
+  return { X, Y, Z, E, F, K, flip, H, lh, w, segs, revs, bottom, wallSpeed, brim:nBrim, zLim };
 }
 function pathStats(tp) {
   let t = 0, e = 0, ox = tp.X[0], oy = tp.Y[0], oz = tp.Z[0];
@@ -1232,11 +1224,11 @@ function checks(k) {
   const nTh = sectOn(P) ? 24 : 1;   // a twisting or changing cross-section leans differently around the form
   for (let j = 0; j < 200; j++) { const v0 = j / 200, v1 = (j + 1) / 200, dz = H / 200;
     for (let i = 0; i < nTh; i++) { const th = i / nTh * TAU, dr = (sampleProf(P.prof, v1) * (nTh > 1 ? lobeF(P, th, v1) : 1) - sampleProf(P.prof, v0) * (nTh > 1 ? lobeF(P, th, v0) : 1)) * MM; const a = Math.atan2(Math.abs(dr), dz) * 180 / Math.PI; if (a > worst) { worst = a; at = v0; } } }
-  const lim = 50 + (pr.nozzle - .4) * 15;
-  add(worst > lim + 8 ? 'bad' : worst > lim ? 'warn' : 'ok', `Steepest overhang ${worst.toFixed(0)}° at ${Math.round(at * 100)}% height (≈${lim.toFixed(0)}° is safe with a ${pr.nozzle} mm nozzle).`);
-  // layer-to-layer step caused by the textures (must stay well inside one line width)
-  const step = textureStep(k), ratio = step / w;
-  add(ratio > .6 ? 'bad' : ratio > .45 ? 'warn' : 'ok', `Texture moves up to ${step.toFixed(2)} mm between layers (${Math.round(ratio * 100)}% of the ${w} mm line). Under ~45% keeps layers bonded.`);
+  const fv = v => Math.round((partFlip(k) ? 1 - v : v) * 100);
+  add(worst > 52 ? 'bad' : worst > 45 ? 'warn' : 'ok', `Steepest overhang of the outline ${worst.toFixed(0)}° at ${fv(at)}% of the print height (past ~45° the wall starts to droop).`);
+  // the real test: how far each layer steps sideways from the one it sits on — outline, cross-section and texture together
+  const st = layerStep(k), ratio = st.mm / w;
+  add(ratio > .6 ? 'bad' : ratio > .5 ? 'warn' : 'ok', `Each layer rests on the one below: the biggest sideways step is ${st.mm.toFixed(2)} mm (${Math.round(ratio * 100)}% of the ${w} mm line) at ${fv(st.v)}% of the print height. Over ~50% the line has nothing under it and the print fails there.`);
   // texture detail vs line width
   const usesB = m.some(x => x > .01), usesA = m.some(x => x < .99);
   for (const T of [usesA ? P : null, usesB ? P.b : null].filter(Boolean)) {
@@ -1255,6 +1247,8 @@ function checks(k) {
     add(hi > lmax || lo < lmin ? 'bad' : (hi > pr.nozzle * .65 || lo < pr.nozzle * .2) ? 'warn' : 'ok', `Non-planar layers vary ${lo.toFixed(2)}–${hi.toFixed(2)} mm (extrusion is scaled to match; ${lmin.toFixed(2)}–${lmax.toFixed(2)} works for this nozzle).`);
     const deg = Math.atan(slope) * 180 / Math.PI;
     add(deg > 30 ? 'bad' : deg > 18 ? 'warn' : 'ok', `Nozzle climbs up to ${deg.toFixed(0)}° within a layer — above ~20° the nozzle cone can scrape the layer below. Fewer waves or less amplitude lowers it.`);
+    const rise = headRise(k);
+    add(rise > 3.5 ? 'bad' : rise > 2 ? 'warn' : 'ok', `Printed wall rises up to ${rise.toFixed(1)} mm above the nozzle tip within 35 mm of it. The heater block and fan duct sit only ~3 mm above the tip, so more than that and the print head hits the part.`);
   }
   if (isZW(P)) {
     const M = P.mesh, N = zwN(P); let rMin = Infinity, rM = 0;
@@ -1262,7 +1256,8 @@ function checks(k) {
     let hMax = 0, hMin = Infinity; for (let j = 0; j <= 20; j++) { const hz = zwHoleH(P, M.rim + (H - 2 * M.rim) * j / 20, H); hMax = Math.max(hMax, hz); hMin = Math.min(hMin, hz); }
     const A = hMax / 4, slope = Math.atan(A * N / rM) * 180 / Math.PI, span = TAU * rM / N, holeW = span / 2;
     add(slope > 55 ? 'bad' : slope > 40 ? 'warn' : 'ok', `Net: ${N} holes around; the line climbs and dips at up to ${slope.toFixed(0)}° (keep under ~40° — wider or lower holes flatten it).`);
-    add(span > 16 ? 'bad' : span > 11 ? 'warn' : 'ok', `Holes ≈ ${holeW.toFixed(1)} mm wide × ${hMin === hMax ? hMax.toFixed(1) : hMin.toFixed(1) + '–' + hMax.toFixed(1)} mm tall. Strands bridge ${span.toFixed(1)} mm between contacts (keep under ~11 mm). Prints at ≤ 22 mm/s with full fan.`);
+    add(span > 16 ? 'bad' : span > 11 ? 'warn' : 'ok', `Holes ≈ ${holeW.toFixed(1)} mm wide × ${hMin === hMax ? hMax.toFixed(1) : hMin.toFixed(1) + '–' + hMax.toFixed(1)} mm tall. Strands bridge ${span.toFixed(1)} mm between contacts (keep under ~11 mm).`);
+    { const NS = NET_SPEED(pr.nozzle); add('ok', `Speed follows the wave: ${NS.air} mm/s where the strand crosses air, ${NS.touch} mm/s where it lands on the lap below, the Z axis never above ${PRINTERS[pr.printer].zSpeed} mm/s, fan high.`); }
     add(hMin / 4 < lh ? 'warn' : 'ok', hMin / 4 < lh ? `Smallest holes (${hMin.toFixed(1)} mm) are under ~4 layers tall — they will barely open.` : `Each contact point is one bead on one bead — strong enough for a shade, but handle gently.`);
   }
   if (P.mesh.on && !isZW(P)) {
@@ -1270,10 +1265,14 @@ function checks(k) {
     let rM = 0; for (let j = 0; j <= 20; j++) rM = Math.max(rM, sampleProf(P.prof, j / 20) * MM);
     const span = TAU * rM / N / 2;
     add(ratio < 1.2 || ratio > 4 ? 'warn' : 'ok', `Mesh bulges ${M.amp.toFixed(1)} mm = ${ratio.toFixed(1)}× the line — about 1.3–4× opens clean gaps with a ${pr.nozzle} mm nozzle.`);
-    add(span > 14 ? 'bad' : span > 9 ? 'warn' : 'ok', `Each bulge bridges ~${span.toFixed(1)} mm of air (keep under ~9 mm; more openings around shortens it). Bulges print at ≤30 mm/s with full fan.`);
+    add(span > 14 ? 'bad' : span > 9 ? 'warn' : 'ok', `Each bulge bridges ~${span.toFixed(1)} mm of air (keep under ~9 mm; more openings around shortens it). Bulges print at 15 mm/s with the fan high.`);
   }
   if (P.mod.src === 'attract' && !P.mod.attrs.length) add('warn', 'Attractor source chosen but no points placed yet — tap the surface with the Attractor tool.');
-  if (k === 'shade') { const rTop = sampleProf(P.prof, 1) * MM - w; add('ok', `Top opening is about Ø${(rTop * 2).toFixed(0)} mm inside — check your lamp socket fits.`); }
+  { // what it stands on while printing
+    const fl = partFlip(k), foot = sampleProf(P.prof, fl ? 1 : 0) * 2 * MM * minF(P), b = brimMM(k), open = k === 'shade';
+    const lvl = open && !b && foot < H * .5 ? 'warn' : 'ok';
+    add(lvl, `Prints ${k === 'base' ? 'top plate down' : k === 'shade' ? (fl ? 'top end down' : 'bottom end down') : 'standing on its bottom'}${open ? ' on a single-line ring' : ''} Ø${foot.toFixed(0)} mm, ${H.toFixed(0)} mm tall` + (b ? `, with a ${b} mm brim to hold it down (peel it off after).` : lvl === 'warn' ? ' — add a brim, or it can be knocked loose as it grows.' : '.'));
+  }
   if (state.mode === 'vessel' && state.planter.on) { const g = saucerGap(); add(g < 1 ? 'bad' : 'ok', g < 1 ? `The pot does not fit inside its saucer (${g.toFixed(1)} mm). Use “Match saucer to pot”.` : `The pot stands in its saucer with ${g.toFixed(0)} mm to spare all round.`); }
   if (k === 'vessel' && state.planter.hole > 0) add(pr.bottom < 1 ? 'warn' : 'ok', pr.bottom < 1 ? 'Drainage hole needs at least one solid bottom layer.' : `Drainage hole Ø${state.planter.hole} mm is left open in the bottom (G-code). In an STL, drill it afterwards.`);
   if (sectOn(P)) add('ok', `Cross-section is not round: the line keeps its ${w} mm width and simply follows the outline. Sizes are measured across the widest points.`);
@@ -1281,16 +1280,27 @@ function checks(k) {
   return out;
 }
 const texName = t => ({ smooth:'Smooth', woven:'Woven', ribs:'Ribs', rings:'Coil', diamond:'Lattice', wave:'Wave', knurl:'Knurl' })[t] || t;
-function makePrintable(k) { easeSlope(state[k], 45 + (state.print.nozzle - .4) * 15); }
-function textureStep(k) { // biggest layer-to-layer jump caused by the textures alone (mm)
+function makePrintable(k) { easeSlope(state[k], 40); fitTexture(k); }
+// Biggest sideways step (mm) between one printed layer and the next, from everything that moves the wall:
+// outline, cross-section, petals and texture. Under about half a line width every layer still rests on the one below.
+function layerStep(k) {
   const pr = state.print, P = state[k], m = getMask(k), lh = pr.layerH, H = P.h * MM;
-  const tex = (th, v) => disp(P, th, v, m) * rimFade(v);
-  let step = 0; const layers = Math.floor(H / lh), stride = Math.max(1, Math.floor(layers / 160));
-  for (let L = 2; L < layers - 1; L += stride) {
+  let step = 0, at = 0; const layers = Math.floor(H / lh), stride = Math.max(1, Math.floor(layers / 200));
+  for (let L = 1; L < layers - 1; L += stride) {
     const va = (L * lh) / H, vb = ((L + 1) * lh) / H;
-    for (let i = 0; i < 180; i++) { const th = i / 180 * TAU; const d = Math.abs(tex(th, vb) - tex(th, va)) * MM; if (d > step) step = d; }
+    for (let i = 0; i < 180; i++) { const th = i / 180 * TAU; const d = Math.abs(surfR(P, th, vb, m) - surfR(P, th, va, m)) * MM; if (d > step) { step = d; at = vb; } }
   }
-  return step;
+  return { mm:step, v:at };
+}
+const textureStep = k => layerStep(k).mm;
+// Non-planar layers: how far the wall already printed rises above the nozzle tip within the print head's footprint (mm)
+function headRise(k) {
+  const pr = state.print, P = state[k], lh = pr.layerH, H = P.h * MM; let worst = 0;
+  for (let j = 2; j <= 40; j++) { const v = j / 40, r = Math.max(5, sampleProf(P.prof, v) * MM);
+    for (let i = 0; i < 48; i++) { const th = i / 48 * TAU, a = warpMM(P, k, th, v);
+      for (let q = 1; q <= 96; q++) { const dth = q / 96 * TAU; if (2 * r * Math.sin(dth / 2) > 35) continue;   // only what lies under the head
+        const rise = warpMM(P, k, th - dth, Math.max(0, v - dth / TAU * lh / H)) - a - lh * dth / TAU; if (rise > worst) worst = rise; } } }
+  return worst;
 }
 // Coarsen patterns that are too fine for the chosen nozzle (repeat ≥ 3 line widths, bands ≥ 2.4 layers, depth that still bonds).
 function adaptToNozzle(k) {
@@ -1303,15 +1313,19 @@ function adaptToNozzle(k) {
   const a0 = P.amp + P.b.amp; fitTexture(k); if (P.amp + P.b.amp !== a0) changed = true;
   return changed;
 }
+// Scale the texture down just enough that outline + texture together stay under ~45% of a line per layer.
 function fitTexture(k) {
-  const P = state[k], target = lineW(state.print.nozzle) * .4;
-  for (let it = 0; it < 4; it++) { const s = textureStep(k); if (s <= target) break; const f = Math.max(.1, target / s * .97); P.amp = +(P.amp * f).toFixed(4); P.b.amp = +(P.b.amp * f).toFixed(4); }
+  const P = state[k], target = lineW(state.print.nozzle) * .45, a0 = P.amp, b0 = P.b.amp;
+  if (!a0 && !b0) return; if (textureStep(k) <= target) return;
+  let lo = 0, hi = 1; const set = f => { P.amp = +(a0 * f).toFixed(4); P.b.amp = +(b0 * f).toFixed(4); };
+  for (let it = 0; it < 7; it++) { const mid = (lo + hi) / 2; set(mid); if (textureStep(k) <= target) lo = mid; else hi = mid; }
+  set(Math.max(lo, .15));
 }
 
 /* ═════════════════════ G-code ═════════════════════ */
 function gcode(k) {
   const pr = state.print, printer = PRINTERS[pr.printer], fil = FILAMENTS[pr.filament];
-  const tp = toolpath(k), st = pathStats(tp);
+  const tp = toolpath(k), st = pathStats(tp), airy = state[k].mesh.on, fan = airy ? Math.max(fil.fan, 80) : fil.fan;
   const cx = printer.bed[0] / 2, cy = printer.bed[1] / 2;
   const nozT = fil.nozzle + (pr.nozzle >= .8 ? 10 : pr.nozzle >= .6 ? 5 : 0);
   let fp = [Infinity, Infinity, -Infinity, -Infinity];
@@ -1320,11 +1334,11 @@ function gcode(k) {
   const totalMin = Math.round(st.sec / 60);
   const o = [];
   o.push(`; HEADER_BLOCK_START`, `; generated by Monoline (monoline.si) (spiral vase, single continuous line)`, `; printer_model = Bambu Lab ${printer.name}`, `; nozzle_diameter = ${pr.nozzle}`, `; filament_type = ${fil.name}`,
-    `; layer_height = ${pr.layerH}`, `; line_width = ${tp.w}`, `; total layer number: ${tp.revs + Math.max(tp.bottom, 1)}`, `; estimated printing time = ${totalMin} min`, `; filament used [g] = ${st.grams.toFixed(1)}`, `; HEADER_BLOCK_END`, ``);
+    `; layer_height = ${pr.layerH}`, `; line_width = ${tp.w}`, `; speed planned per move: slower on overhangs, strands in air and steep Z moves (Z ≤ ${tp.zLim} mm/s)`, `; brim loops = ${tp.brim}, part ${tp.flip ? 'flipped' : 'upright'} on the bed`, `; total layer number: ${tp.revs + Math.max(tp.bottom, 1)}`, `; estimated printing time = ${totalMin} min`, `; filament used [g] = ${st.grams.toFixed(1)}`, `; HEADER_BLOCK_END`, ``);
   if (pr.customStart.trim()) {
     o.push('; ===== custom start G-code =====', pr.customStart.replaceAll('[bed_temperature_initial_layer_single]', fil.bed).replaceAll('[nozzle_temperature_initial_layer]', nozT), '; ===== end custom start =====');
   } else {
-    o.push(`; ===== start =====`, `M73 P0 R${totalMin}`, `G90`, `M83`, `M220 S100`, `M221 S100`, `M204 S5000`,
+    o.push(`; ===== start =====`, `M73 P0 R${totalMin}`, `G90`, `M83`, `M220 S100`, `M221 S100`, `M204 S${airy ? 1500 : 4000} ; gentle acceleration: a single tall wall sways`,
       `M106 P1 S0`, `M140 S${fil.bed}`, `M104 S140 ; warm nozzle without oozing`, `G28 ; home`, `M190 S${fil.bed}`, `M109 S140`);
     if (pr.abl) o.push(`G29.2 S1 ; enable bed-mesh compensation`, `G29 A X${fx0} Y${fy0} I${fw} J${fh} ; probe the footprint only`, `M400`);
     else o.push(`G29.2 S1 ; use stored bed mesh`);
@@ -1342,7 +1356,7 @@ function gcode(k) {
     if (newLayer) {
       layer++;
       o.push(`; LAYER ${layer}`, `M73 L${layer}`, `M73 P${Math.min(99, Math.round(elapsed * 1.12 / st.sec * 100))} R${Math.max(0, Math.round((st.sec - elapsed * 1.12) / 60))}`);
-      if (layer === 2 && !fanOn) { o.push(`M106 P1 S${Math.round(fil.fan * 2.55)}`); fanOn = true; }
+      if (layer === 2 && !fanOn) { o.push(`M106 P1 S${Math.round(fan * 2.55)}`); fanOn = true; }
       if (i >= revStart && layer === Math.max(tp.bottom, 1) + 1) o.push('; spiral vase: Z rises continuously from here, no seams');
     }
     if (tp.K[i]) {
@@ -1404,7 +1418,8 @@ function lampChecks() {
   // clearance between bulb (or LED module) and the inner shade wall
   let minC = Infinity, at = 0, sticksOut = false;
   if (H.bulb) {
-    for (let i = 0; i <= 50; i++) { const z = i / 50 * H.bulb.h, y = H.bulb.y0 + H.bulb.dir * z, rb = bulbR(H.bulb, z) * u, ri = shadeInnerAt(y);
+    for (let i = 11; i <= 50; i++) { const z = i / 50 * H.bulb.h,   // from just above the metal cap (it sits inside the socket) to the tip
+      y = H.bulb.y0 + H.bulb.dir * z, rb = bulbR(H.bulb, z) * u, ri = shadeInnerAt(y);
       if (ri == null) { if (rb > 1) sticksOut = true; continue; } const c = ri - rb; if (c < minC) { minC = c; at = y; } }
   } else { const y = H.sock.y + H.sock.h * .5, ri = shadeInnerAt(y); if (ri != null) { minC = ri - H.F.d / 2; at = y; } }
   if (sticksOut) add('bad', lay === 'pendant' ? 'The bulb hangs out below the shade — make the shade longer or pick a shorter bulb.' : 'The bulb pokes out of the top of the shade — make the shade taller or pick a smaller bulb.');
@@ -1513,11 +1528,18 @@ function drawingSVG() {
   T(tbx + 3, tby + 25.5, 'MONOLINE.SI', 'start', 2.1, mute); T(tbx + 46, tby + 25.5, lamp ? LAYOUTS[state.lamp.layout].toUpperCase() : '', 'start', 1.9, mute);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="297mm" height="210mm" viewBox="0 0 297 210" font-family="IBM Plex Mono, ui-monospace, monospace" letter-spacing=".04"><defs><pattern id="hatch" width="1.2" height="1.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="1.2" stroke="${ink}" stroke-width=".18"/></pattern></defs><rect width="297" height="210" fill="#fff"/>${o.join('')}</svg>`;
 }
+// Time and plastic for one part, without building the full toolpath. A net uses far fewer laps and much less plastic.
+function estimatePart(k) {
+  const pr = state.print, w = lineW(pr.nozzle), fil = FILAMENTS[pr.filament], P = state[k], H = P.h * MM, layers = Math.floor(H / pr.layerH);
+  let per = 0; for (let j = 0; j < 20; j++) per += TAU * sampleProf(P.prof, (j + .5) / 20) * MM; per /= 20;
+  const zw = isZW(P), laps = zw ? Math.max(1, zwTable(P, 0, pr.layerH, H).T) : layers;
+  const sp = zw ? NET_SPEED(pr.nozzle).air * 1.35 : P.mesh.on ? Math.min(pr.speed, 30) : Math.min(pr.speed, fil.flow / (w * pr.layerH), per / 6) * .9;
+  const g = partMass(k).m * (zw ? Math.min(1, laps * pr.layerH * 1.35 / H) : 1);
+  return { sec:laps * per / sp * 1.12 + 240, g, laps };
+}
 function estimateAll() {
-  const pr = state.print, w = lineW(pr.nozzle), fil = FILAMENTS[pr.filament]; let g = 0, sec = 0;
-  for (const k of parts()) { const pm = partMass(k); g += pm.m; const H = state[k].h * MM, layers = Math.floor(H / pr.layerH); let per = 0; for (let j = 0; j < 20; j++) per += TAU * sampleProf(state[k].prof, (j + .5) / 20) * MM; per /= 20;
-    sec += layers * per / Math.min(pr.speed, fil.flow / (w * pr.layerH)) + 240; }
-  const m = Math.round(sec * 1.12 / 60);
+  let g = 0, sec = 0; for (const k of parts()) { const e = estimatePart(k); g += e.g; sec += e.sec; }
+  const m = Math.round(sec / 60);
   return { g:Math.round(g), h:m >= 60 ? `${Math.floor(m / 60)} H ${m % 60} MIN` : m + ' MIN' };
 }
 
@@ -1984,7 +2006,7 @@ function renderPrint() {
   const s1 = section('Printer', 'Bambu Lab. G-code is made for the printer you choose here.');
   chips(s1, Object.entries(PRINTERS).map(([k, p]) => [k, p.name]), pr.printer, k => { pushUndo(); pr.printer = k; rr(); });
   const s2 = section('Nozzle', 'Bigger nozzle → thicker, faster, bolder layers. Match the nozzle that’s installed.');
-  chips(s2, NOZZLES.map(n => [n, n + ' mm']), pr.nozzle, n => { pushUndo(); pr.nozzle = n; pr.layerH = +(n * .5).toFixed(2); pr.speed = n === .4 ? 90 : n === .6 ? 70 : 50; pr.bottom = Math.max(2, Math.ceil(.9 / pr.layerH)); busy(() => { if (state.mode === 'lamp') fitToFitting(); const ch = parts().map(adaptToNozzle).some(Boolean); rebuild(); rr(); if (ch) toast(`Patterns coarsened to suit the ${n} mm nozzle`); }); });
+  chips(s2, NOZZLES.map(n => [n, n + ' mm']), pr.nozzle, n => { pushUndo(); pr.nozzle = n; pr.layerH = +(n * .5).toFixed(2); pr.speed = n === .4 ? 60 : n === .6 ? 50 : 40; pr.bottom = Math.max(2, Math.ceil(.9 / pr.layerH)); busy(() => { if (state.mode === 'lamp') fitToFitting(); const ch = parts().map(adaptToNozzle).some(Boolean); rebuild(); rr(); if (ch) toast(`Patterns coarsened to suit the ${n} mm nozzle`); }); });
   slider(s2, 'Layer height', () => pr.layerH, v => pr.layerH = v, +(pr.nozzle * .25).toFixed(2), +(pr.nozzle * .75).toFixed(2), .01, v => v.toFixed(2) + ' mm', () => { updateBadge(); applyLook(); if (state.view === 'printed') parts().forEach(schedulePrinted); if (state.view === 'path') rebuildPaths(); });
   onCommit = () => renderPanel();
   slider(s2, 'Wall speed', () => pr.speed, v => pr.speed = v, 15, 200, 1, v => { const cap = FILAMENTS[pr.filament].flow / (lineW(pr.nozzle) * pr.layerH); return v > cap ? `${v} → ${Math.round(cap)} mm/s (flow limit)` : v + ' mm/s'; });
@@ -1997,9 +2019,11 @@ function renderPrint() {
   const s4 = section('What to print');
   if (parts().length > 1) chips(s4, parts().map(k => [k, PART_NAMES(k)]), printPart(), k => { pr.part = k; clearPath(); renderPanel(); });
   if (lamp) {
-    if (printPart() === 'shade') { s4.append(el('div', { className:'sub', textContent:'Shade orientation on the bed' })); chips(s4, [['rim', 'Rim down'], ['top', 'Top down']], pr.orient, k => { pushUndo(); pr.orient = k; clearPath(); renderPanel(); }); }
+    if (printPart() === 'shade') { s4.append(el('div', { className:'sub', textContent:'Shade orientation on the bed' })); chips(s4, [['auto', 'Auto · wider end down'], ['rim', 'Bottom down'], ['top', 'Top down']], pr.orient, k => { pushUndo(); pr.orient = k; clearPath(); renderPanel(); }); }
   }
   if (printPart() !== 'shade') slider(s4, 'Solid bottom layers', () => pr.bottom, v => pr.bottom = v, 0, 10, 1, v => `${v} · ${(v * pr.layerH).toFixed(1)} mm`);
+  s4.append(el('div', { className:'sub', textContent:'Brim · extra loops around the foot that hold a tall thin wall down', style:'margin:8px 0 2px' }));
+  chips(s4, [['auto', `Auto${pr.brim === 'auto' ? ' · ' + brimMM(printPart()) + ' mm' : ''}`], [0, 'Off'], [3, '3 mm'], [6, '6 mm'], [10, '10 mm']], pr.brim, v => { pushUndo(); pr.brim = v; clearPath(); renderPanel(); });
   toggle(s4, 'Auto bed leveling (footprint)', pr.abl, v => pr.abl = v);
 
   const k = printPart();
@@ -2007,9 +2031,9 @@ function renderPrint() {
   const card = el('div', { className:'card' });
   (lastChecks = checks(k)).forEach(c => card.append(el('div', { className:'chk' }, [el('span', { className:'dot ' + c.lvl }), el('span', { textContent:c.msg })])));
   sc.append(card);
-  if (lastChecks.some(c => c.lvl !== 'ok' && /overhang/i.test(c.msg))) {
-    const fix = el('button', { textContent:'Ease overhangs automatically', style:'margin-top:8px' });
-    fix.onclick = () => { pushUndo(); makePrintable(k); rebuild(k); renderPanel(); toast('Silhouette eased'); };
+  if (lastChecks.some(c => c.lvl !== 'ok' && /overhang|rests on the one below/i.test(c.msg))) {
+    const fix = el('button', { textContent:'Make it printable · ease the outline, soften the texture', style:'margin-top:8px' });
+    fix.onclick = () => busy(() => { pushUndo(); makePrintable(k); rebuild(k); renderPanel(); toast('Outline eased and texture fitted'); });
     sc.append(fix);
   }
   if (lastChecks.some(c => c.lvl === 'bad' && /saucer/.test(c.msg))) {
@@ -2017,19 +2041,11 @@ function renderPrint() {
     fs.onclick = () => { pushUndo(); state.planter.auto = true; rebuild(); renderPanel(); toast('Saucer matched to the pot'); };
     sc.append(fs);
   }
-  if (lastChecks.some(c => c.lvl !== 'ok' && /Texture moves/.test(c.msg))) {
-    const fx = el('button', { textContent:'Fit texture depth to this nozzle', style:'margin-top:8px;margin-left:6px' });
-    fx.onclick = () => busy(() => { pushUndo(); fitTexture(k); rebuild(k); renderPanel(); toast('Texture depth fitted'); });
-    sc.append(fx);
-  }
+
   // quick estimate without building the full path
-  const H = state[k].h * MM, w = lineW(pr.nozzle);
-  let per = 0; for (let j = 0; j < 30; j++) per += TAU * sampleProf(state[k].prof, (j + .5) / 30) * MM; per /= 30;
-  const layers = Math.floor(H / pr.layerH), speed = Math.min(pr.speed, FILAMENTS[pr.filament].flow / (w * pr.layerH));
-  const mins = Math.round((layers * per / speed + 240) / 60 * 1.12);
-  const grams = layers * per * w * pr.layerH * 1.24e-3;
+  const est = estimatePart(k), mins = Math.round(est.sec / 60), grams = est.g, layers = est.laps, w = lineW(pr.nozzle);
   const stats = el('div', { className:'stats card' });
-  [['Layers', layers], ['Line width', w + ' mm'], ['Est. time', mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : mins + ' min'], ['Filament', `≈ ${Math.round(grams)} g`]]
+  [[isZW(state[k]) ? 'Laps' : 'Layers', layers], ['Line width', w + ' mm'], ['Est. time', mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : mins + ' min'], ['Filament', `≈ ${Math.round(grams)} g`]]
     .forEach(([a, b]) => stats.append(el('div', {}, [a, el('b', { textContent:b })])));
   sc.append(stats);
 
