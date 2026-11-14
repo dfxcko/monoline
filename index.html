@@ -224,6 +224,7 @@
 
 
 
+
 </div></div>
 <div id="start"><div class="in">
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
@@ -272,7 +273,7 @@ const LAMP_PRESETS = {
     shade:part(1.1, prof(v => (15.8 + 50 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('knurl', .0025, 56, 26, .18), PLAIN(), '#ef7d5a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.62, soft:.16 }),
     base: part(.6, prof(v => .52 - .26 * Math.pow(v, 1.3)), pat('rings', .003, 40, 14), PLAIN(), '#a9d6b8') },
   lantern:{ studio:true, name:'Lantern', note:'Table lamp · open mesh, diamond cells', lamp:{ layout:'bell', fitting:'e27', bulb:'a60', watts:6 },
-    shade:part(1.6, prof(v => (24 + 55 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), PLAIN(), PLAIN(), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.6, lobes:36, rings:1, bumps:2, width:1, stagger:true, rim:8 }),
+    shade:part(1.6, prof(v => (24 + 55 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), PLAIN(), PLAIN(), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.5, lobes:46, rings:1, bumps:2, width:1, stagger:true, rim:8 }),
     base: part(.6, prof(v => .58 - .28 * Math.pow(v, 1.2)), pat('ribs', .004, 52, 16), PLAIN(), '#2f4fb5') },
   sash:{ studio:true, name:'Sash', note:'Pendant · a knurled ribbon winds through ribs', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
     shade:part(1.8, prof(v => (22.2 + 88 * Math.pow(1 - v, .74)) / MM), pat('ribs', .004, 64, 20, .2), pat('knurl', .003, 64, 40, .2), '#c96a3b', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }), base:STEM() },
@@ -293,7 +294,7 @@ const VESSEL_PRESETS = {
   tide:{ studio:true, cat:'bowl', name:'Tide bowl', note:'Three soft corners · knurl · rim rises at each corner',
     vessel:part(.7, prof(v => .44 + .32 * Math.pow(Math.sin(v * Math.PI / 2), 1.2)), pat('knurl', .003, 88, 22, .15), PLAIN(), '#f1d98a', 3, .03, { rim:1.4, waves:3 }) },
   sieve:{ studio:true, cat:'bowl', name:'Sieve basket', note:'Solid foot · open mesh wall',
-    vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.5, lobes:40, rings:1, bumps:2, width:1, stagger:true, rim:6 }) },
+    vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.4, lobes:48, rings:1, bumps:2, width:1, stagger:true, rim:6 }) },
   terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
     vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .0035, 40, 36), PLAIN(), '#c96a3b') },
   quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
@@ -571,20 +572,26 @@ function zwTable(P, z0, lh, Hmm, flip = false) {
   const amp = z => { const v = Math.min(1, Math.max(0, z / Hmm)); return zwHoleH(P, z, Hmm, flip) / 4 * Math.max(0, Math.min(1, (z - M.rim) / 3, (Hmm - M.rim - z) / 3)) * (M.follow ? sampleProf(P.prof, flip ? 1 - v : v) / rMax : 1); };
   let aPrev = 0;
   for (let L = 0; L < 40000; L++) {
-    // strands in air sag a little, so a lap lands slightly into the crest below (up to a quarter of a layer) rather than just touching it
-    const base = L === 0 ? z0 + lh : Z[L - 1] + lh * (1 - .25 * Math.min(1, (aPrev + amp(Z[L - 1] + lh + aPrev)) / lh)) + aPrev;
-    const a = amp(base), zz = base + a;
+    // Each lap presses down into the crest below: its low points sit only ~half a layer above the strand they land on,
+    // so the hot line squashes into it and fuses, even where the strand below has sagged.
+    const press = ZW_PRESS * Math.min(1, aPrev / (lh * .5));
+    const base = L === 0 ? z0 + lh : Z[L - 1] + aPrev + lh * (1 - press);
+    // holes grow slowly: the wave may grow by at most a quarter of a layer per lap, so every lap still finds the one below
+    const a = Math.min(amp(base), aPrev + lh * .25), zz = base + a;
     if (zz + a > Hmm + 1e-6) break;
     Z.push(zz); A.push(a); aPrev = a;
   }
   return { Z, A, T:Z.length };
 }
+const ZW_PRESS = .45, MESH_PRESS = .4;   // how far (in layers) a net lap pushes down into the strand below at each contact
+// Wave shape: a sine with flattened crests and troughs, so each contact is a short level run where the lap rests on the one below
+const zwS = ph => Math.max(-1, Math.min(1, 1.5 * Math.sin(ph)));
 function zwAt(tb, t, th, N, lh) {
   const L = Math.min(tb.T - 1, Math.max(0, Math.floor(t))), f = Math.min(1, Math.max(0, t - L));
   const next = L + 1 < tb.T ? tb.Z[L + 1] : tb.Z[L] + lh + 2 * tb.A[L];
   // amplitude also runs smoothly through the lap: then a lap's low points sit exactly one layer above the crests below, even where the wave grows or fades
   const base = tb.Z[L] + f * (next - tb.Z[L]), a = tb.A[L] + f * ((L + 1 < tb.T ? tb.A[L + 1] : tb.A[L]) - tb.A[L]);
-  return { base, a, top:base + a * Math.sin(N * th + (L & 1) * Math.PI) };
+  return { base, a, top:base + a * zwS(N * th + (L & 1) * Math.PI) };
 }
 const meshLap = (P, t, th) => Math.floor(t - Math.PI / (2 * Math.max(4, Math.round(P.mesh.lobes))) / TAU);
 // outer surface radius (scene units)
@@ -1085,7 +1092,7 @@ function brimMM(k) { // a brim widens the foot of single-wall parts so they cann
   return k === 'shade' ? 6 : foot < H * .45 ? 4 : 0;
 }
 // Speeds (mm/s) for the parts of a perforated wall: strands in mid-air need time to set; contact points fuse at a moderate speed.
-const NET_SPEED = n => ({ air:n >= .8 ? 8 : n >= .6 ? 9 : 10, touch:n >= .8 ? 14 : n >= .6 ? 16 : 18 });
+const NET_SPEED = n => ({ air:n >= .8 ? 8 : n >= .6 ? 9 : 10, touch:n >= .8 ? 6 : n >= .6 ? 7 : 8 });   // contacts print slowest: the line has time to press in and fuse
 // Returns arrays in printer space (mm, origin = bed centre). Kind: 0 = extrude, 1 = travel.
 // Feed rate is planned per point: it slows where a layer hangs out over the one below, where a strand crosses air,
 // where the nozzle climbs or dips (Z axis kept under its limit) and on very short segments. E always follows length,
@@ -1156,25 +1163,39 @@ function toolpath(k) {
   }
   const lapR = new Float32Array(segs + 1);   // where the lap below put its line, to see how far this one hangs out
   for (let s = 0; s <= segs; s++) lapR[s] = R(s / segs * TAU, Math.max(lh / 2, z0 - lh / 2));
+  // mesh: where this lap lands back on a strand that bridged air in the lap below, it presses down into it (that strand has sagged)
+  const prevAir = new Uint8Array(segs + 1), prevD = new Float32Array(segs + 1);
+  const rA = new Float32Array(segs + 1), hA = new Float32Array(segs + 1), pA = new Float32Array(segs + 1), dA = new Float32Array(segs + 1);
+  const win = Math.max(1, Math.round(.8 / (TAU * rMax / segs)));   // press ramps in and out over ~0.8 mm
   for (let rv = 0; rv < revs; rv++) {
     const cap = Math.max(6, Math.min(wallSpeed, revLen[rv] / minLayer)); // every lap takes ≥ 6 s (8 s for perforated walls) so it can cool
-    for (let s = 1; s <= segs; s++) {
-      const t = rv + s / segs, th = s / segs * TAU;
-      if (zw) { // up/down net: same line width, the nozzle rides the wave; slow where the strand crosses air, quicker where it lands on the lap below
+    if (zw) {
+      for (let s = 1; s <= segs; s++) {
+        const t = rv + s / segs, th = s / segs * TAU;
+        // up/down net: the nozzle rides the wave, presses ZW_PRESS of a layer into the strand below at each contact, slowest there
         const q = zwAt(tb, t, thM(th), NW, lh), r = R(th, q.top - lh / 2);
         const below = rv === 0 ? z0 : zwAt(tb, t - 1, thM(th), NW, lh).top, gap = q.top - below - lh;
-        const sup = 1 - smooth(.15 * lh, .8 * lh, gap), feed = Math.min(cap, NS.air + (NS.touch - NS.air) * sup);
-        push(r * Math.cos(th), r * Math.sin(th), q.top, 0, feed, rv === 0 ? s / segs : 1);
-        continue;
+        const sup = 1 - smooth(-.2 * lh, .6 * lh, gap), feed = Math.min(cap, NS.air + (NS.touch - NS.air) * sup);
+        push(r * Math.cos(th), r * Math.sin(th), q.top, 0, feed, (rv === 0 ? s / segs : 1) * (1 + .12 * sup));   // a little extra plastic where it presses into the lap below
       }
-      const z = z0 + t * lh;
+      continue;
+    }
+    for (let s = 1; s <= segs; s++) {
+      const t = rv + s / segs, th = s / segs * TAU, z = z0 + t * lh;
       const mo = mesh ? meshMM(P, thM(th), meshLap(P, z / lh, thM(th)), flip ? H - (z - lh / 2) : z - lh / 2, H) : 0;
-      const r0 = R(th, z - lh / 2), r = r0 + mo;
-      const hang = Math.abs(r - lapR[s]) / w; lapR[s] = r;     // sideways step from where the lap below put its line, in line widths
+      rA[s] = R(th, z - lh / 2) + mo; hA[s] = Math.abs(rA[s] - lapR[s]) / w;   // sideways step from where the lap below put its line, in line widths
+      pA[s] = mesh && rv > 0 && hA[s] <= .5 && prevAir[s] ? 1 : 0;
+    }
+    if (mesh) for (let s = 1; s <= segs; s++) { let m = 0, c = 0; for (let j = -win; j <= win; j++) { m += pA[((s + j - 1) % segs + segs) % segs + 1]; c++; } dA[s] = -MESH_PRESS * lh * Math.min(1, m / c * 1.6); }
+    for (let s = 1; s <= segs; s++) {
+      const t = rv + s / segs, th = s / segs * TAU, z = z0 + t * lh, r = rA[s], hang = hA[s];
       let feed = cap * (1 - .6 * smooth(.25, .55, hang));      // hanging layers print slower, like a slicer's overhang speed
       if (mesh && hang > .5) feed = Math.min(feed, 15);        // mesh: this stretch bridges over air (a bulge going out, or a ring coming back in)
-      const wz = W(th, z), lhe = Math.max(lh * .3, lh + wz - W(th, z - lh));   // local layer height
-      push(r * Math.cos(th), r * Math.sin(th), z + wz, 0, feed, (rv === 0 ? s / segs : 1) * (lhe / lh)); // first lap ramps up; E follows local layer height so width stays constant
+      const d = mesh ? dA[s] : 0, pressing = d < -lh * .05;
+      if (pressing) feed = Math.min(feed, 12);                 // press slowly so the line has time to fuse
+      const wz = W(th, z), lhe = Math.max(lh * .3, lh + wz - W(th, z - lh) + (pressing ? 0 : d - prevD[s]));   // local layer height
+      push(r * Math.cos(th), r * Math.sin(th), z + wz + d, 0, feed, (rv === 0 ? s / segs : 1) * (lhe / lh) * (pressing ? 1.1 : 1)); // first lap ramps up; E follows local layer height so width stays constant; extra plastic where it presses
+      lapR[s] = r; prevAir[s] = mesh && hang > .5 ? 1 : 0; prevD[s] = d;
     }
   }
   return { X, Y, Z, E, F, K, flip, H, lh, w, segs, revs, bottom, wallSpeed, brim:nBrim, zLim };
@@ -1259,7 +1280,7 @@ function checks(k) {
     const A = hMax / 4, slope = Math.atan(A * N / rM) * 180 / Math.PI, span = TAU * rM / N, holeW = span / 2;
     add(slope > 55 ? 'bad' : slope > 40 ? 'warn' : 'ok', `Net: ${N} holes around; the line climbs and dips at up to ${slope.toFixed(0)}° (keep under ~40° — wider or lower holes flatten it).`);
     add(span > 8 ? 'bad' : span > 6 ? 'warn' : 'ok', `Holes ≈ ${holeW.toFixed(1)} mm wide × ${hMin === hMax ? hMax.toFixed(1) : hMin.toFixed(1) + '–' + hMax.toFixed(1)} mm tall. Strands hang ${span.toFixed(1)} mm between contacts. Longer than ~6 mm they sag, the next lap misses them and floats off — make the holes narrower, or use In / out bulges, which bridge level.`);
-    { const NS = NET_SPEED(pr.nozzle); add('ok', `Speed follows the wave: ${NS.air} mm/s where the strand crosses air, ${NS.touch} mm/s where it lands on the lap below, the Z axis never above ${PRINTERS[pr.printer].zSpeed} mm/s, fan high.`); }
+    { const NS = NET_SPEED(pr.nozzle); add('ok', `Each lap presses ${Math.round(ZW_PRESS * 100)}% of a layer down into the strand below at every contact, with 12% extra plastic, at ${NS.touch} mm/s. Strands in air print at ${NS.air} mm/s, holes grow by at most a quarter layer per lap, Z axis never above ${PRINTERS[pr.printer].zSpeed} mm/s.`); }
     add(hMin / 4 < lh ? 'warn' : 'ok', hMin / 4 < lh ? `Smallest holes (${hMin.toFixed(1)} mm) are under ~4 layers tall — they will barely open.` : `Each contact point is one bead on one bead — strong enough for a shade, but handle gently.`);
   }
   if (P.mesh.on && !isZW(P)) {
@@ -1267,7 +1288,7 @@ function checks(k) {
     let rM = 0; for (let j = 0; j <= 20; j++) rM = Math.max(rM, sampleProf(P.prof, j / 20) * MM);
     const span = TAU * rM / N / 2;
     add(ratio < 1.2 || ratio > 4 ? 'warn' : 'ok', `Mesh bulges ${M.amp.toFixed(1)} mm = ${ratio.toFixed(1)}× the line — about 1.3–4× opens clean gaps with a ${pr.nozzle} mm nozzle.`);
-    add(span > 14 ? 'bad' : span > 9 ? 'warn' : 'ok', `Each bulge bridges ~${span.toFixed(1)} mm of air (keep under ~9 mm; more openings around shortens it). Every stretch over air prints at 15 mm/s with the fan high, held at both ends like a normal bridge.`);
+    add(span > 14 ? 'bad' : span > 9 ? 'warn' : 'ok', `Each bulge bridges ~${span.toFixed(1)} mm of air (keep under ~9 mm; more openings around shortens it). Every stretch over air prints at 15 mm/s with the fan high, held at both ends like a normal bridge. Where the next lap lands back on that strand it presses ${Math.round(MESH_PRESS * 100)}% of a layer down into it, slowly and with 10% extra plastic, so the joint fuses even if the strand sagged.`);
   }
   if (P.mod.src === 'attract' && !P.mod.attrs.length) add('warn', 'Attractor source chosen but no points placed yet — tap the surface with the Attractor tool.');
   { // what it stands on while printing
