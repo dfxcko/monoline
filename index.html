@@ -223,6 +223,7 @@
   <p class="lead" style="margin:16px 0 0;font-size:12px">Made by <a href="https://davidficko.com" style="color:inherit">David Ficko</a></p>
 
 
+
 </div></div>
 <div id="start"><div class="in">
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
@@ -270,8 +271,8 @@ const LAMP_PRESETS = {
   ember:{ studio:true, name:'Ember', note:'Bedside lamp · knurl melting into smooth · E14', lamp:{ layout:'bell', fitting:'e14', bulb:'p45', watts:4 },
     shade:part(1.1, prof(v => (15.8 + 50 * Math.sin(Math.PI * .8 * Math.pow(v, .6))) / MM), pat('knurl', .0025, 56, 26, .18), PLAIN(), '#ef7d5a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.62, soft:.16 }),
     base: part(.6, prof(v => .52 - .26 * Math.pow(v, 1.3)), pat('rings', .003, 40, 14), PLAIN(), '#a9d6b8') },
-  lantern:{ studio:true, name:'Lantern', note:'Table lamp · net that opens towards the middle', lamp:{ layout:'bell', fitting:'e27', bulb:'a60', watts:6 },
-    shade:part(1.6, prof(v => (24 + 55 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), PLAIN(), PLAIN(), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.4, holeH:2.4, holeH2:4.8, grad:'swell', rim:8 }),
+  lantern:{ studio:true, name:'Lantern', note:'Table lamp · open mesh, diamond cells', lamp:{ layout:'bell', fitting:'e27', bulb:'a60', watts:6 },
+    shade:part(1.6, prof(v => (24 + 55 * Math.sin(Math.PI * .85 * Math.pow(v, .7))) / MM), PLAIN(), PLAIN(), '#f3ead8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.6, lobes:36, rings:1, bumps:2, width:1, stagger:true, rim:8 }),
     base: part(.6, prof(v => .58 - .28 * Math.pow(v, 1.2)), pat('ribs', .004, 52, 16), PLAIN(), '#2f4fb5') },
   sash:{ studio:true, name:'Sash', note:'Pendant · a knurled ribbon winds through ribs', lamp:{ layout:'pendant', fitting:'e27', bulb:'g95', watts:7 },
     shade:part(1.8, prof(v => (22.2 + 88 * Math.pow(1 - v, .74)) / MM), pat('ribs', .004, 64, 20, .2), pat('knurl', .003, 64, 40, .2), '#c96a3b', 0, 0, {}, {}, {}, { on:true, dir:'around', pos:.3, span:.3, slant:.5, soft:.035 }), base:STEM() },
@@ -291,8 +292,8 @@ const VESSEL_PRESETS = {
     vessel:part(1.1, prof(v => .14 + .22 * Math.exp(-(((v - .32) / .34) ** 2)) + .04 * smooth(.8, 1, v)), pat('rings', .0025, 40, 40), PLAIN(), '#e7d9c4') },
   tide:{ studio:true, cat:'bowl', name:'Tide bowl', note:'Three soft corners · knurl · rim rises at each corner',
     vessel:part(.7, prof(v => .44 + .32 * Math.pow(Math.sin(v * Math.PI / 2), 1.2)), pat('knurl', .003, 88, 22, .15), PLAIN(), '#f1d98a', 3, .03, { rim:1.4, waves:3 }) },
-  sieve:{ studio:true, cat:'bowl', name:'Sieve basket', note:'Solid foot · holes open toward the rim',
-    vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'zwave', holeW:5.2, holeH:2.4, holeH2:4.8, grad:'linear', rim:6 }) },
+  sieve:{ studio:true, cat:'bowl', name:'Sieve basket', note:'Solid foot · open mesh wall',
+    vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.5, lobes:40, rings:1, bumps:2, width:1, stagger:true, rim:6 }) },
   terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
     vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .0035, 40, 36), PLAIN(), '#c96a3b') },
   quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
@@ -570,7 +571,8 @@ function zwTable(P, z0, lh, Hmm, flip = false) {
   const amp = z => { const v = Math.min(1, Math.max(0, z / Hmm)); return zwHoleH(P, z, Hmm, flip) / 4 * Math.max(0, Math.min(1, (z - M.rim) / 3, (Hmm - M.rim - z) / 3)) * (M.follow ? sampleProf(P.prof, flip ? 1 - v : v) / rMax : 1); };
   let aPrev = 0;
   for (let L = 0; L < 40000; L++) {
-    const base = L === 0 ? z0 + lh : Z[L - 1] + lh + aPrev;
+    // strands in air sag a little, so a lap lands slightly into the crest below (up to a quarter of a layer) rather than just touching it
+    const base = L === 0 ? z0 + lh : Z[L - 1] + lh * (1 - .25 * Math.min(1, (aPrev + amp(Z[L - 1] + lh + aPrev)) / lh)) + aPrev;
     const a = amp(base), zz = base + a;
     if (zz + a > Hmm + 1e-6) break;
     Z.push(zz); A.push(a); aPrev = a;
@@ -1168,9 +1170,9 @@ function toolpath(k) {
       const z = z0 + t * lh;
       const mo = mesh ? meshMM(P, thM(th), meshLap(P, z / lh, thM(th)), flip ? H - (z - lh / 2) : z - lh / 2, H) : 0;
       const r0 = R(th, z - lh / 2), r = r0 + mo;
-      const hang = Math.abs(r0 - lapR[s]) / w; lapR[s] = r0;   // sideways step from the lap below, in line widths
+      const hang = Math.abs(r - lapR[s]) / w; lapR[s] = r;     // sideways step from where the lap below put its line, in line widths
       let feed = cap * (1 - .6 * smooth(.25, .55, hang));      // hanging layers print slower, like a slicer's overhang speed
-      if (mo > w * .3) feed = Math.min(feed, 15);              // a mesh bulge crosses air
+      if (mesh && hang > .5) feed = Math.min(feed, 15);        // mesh: this stretch bridges over air (a bulge going out, or a ring coming back in)
       const wz = W(th, z), lhe = Math.max(lh * .3, lh + wz - W(th, z - lh));   // local layer height
       push(r * Math.cos(th), r * Math.sin(th), z + wz, 0, feed, (rv === 0 ? s / segs : 1) * (lhe / lh)); // first lap ramps up; E follows local layer height so width stays constant
     }
@@ -1256,7 +1258,7 @@ function checks(k) {
     let hMax = 0, hMin = Infinity; for (let j = 0; j <= 20; j++) { const hz = zwHoleH(P, M.rim + (H - 2 * M.rim) * j / 20, H); hMax = Math.max(hMax, hz); hMin = Math.min(hMin, hz); }
     const A = hMax / 4, slope = Math.atan(A * N / rM) * 180 / Math.PI, span = TAU * rM / N, holeW = span / 2;
     add(slope > 55 ? 'bad' : slope > 40 ? 'warn' : 'ok', `Net: ${N} holes around; the line climbs and dips at up to ${slope.toFixed(0)}° (keep under ~40° — wider or lower holes flatten it).`);
-    add(span > 16 ? 'bad' : span > 11 ? 'warn' : 'ok', `Holes ≈ ${holeW.toFixed(1)} mm wide × ${hMin === hMax ? hMax.toFixed(1) : hMin.toFixed(1) + '–' + hMax.toFixed(1)} mm tall. Strands bridge ${span.toFixed(1)} mm between contacts (keep under ~11 mm).`);
+    add(span > 8 ? 'bad' : span > 6 ? 'warn' : 'ok', `Holes ≈ ${holeW.toFixed(1)} mm wide × ${hMin === hMax ? hMax.toFixed(1) : hMin.toFixed(1) + '–' + hMax.toFixed(1)} mm tall. Strands hang ${span.toFixed(1)} mm between contacts. Longer than ~6 mm they sag, the next lap misses them and floats off — make the holes narrower, or use In / out bulges, which bridge level.`);
     { const NS = NET_SPEED(pr.nozzle); add('ok', `Speed follows the wave: ${NS.air} mm/s where the strand crosses air, ${NS.touch} mm/s where it lands on the lap below, the Z axis never above ${PRINTERS[pr.printer].zSpeed} mm/s, fan high.`); }
     add(hMin / 4 < lh ? 'warn' : 'ok', hMin / 4 < lh ? `Smallest holes (${hMin.toFixed(1)} mm) are under ~4 layers tall — they will barely open.` : `Each contact point is one bead on one bead — strong enough for a shade, but handle gently.`);
   }
@@ -1265,7 +1267,7 @@ function checks(k) {
     let rM = 0; for (let j = 0; j <= 20; j++) rM = Math.max(rM, sampleProf(P.prof, j / 20) * MM);
     const span = TAU * rM / N / 2;
     add(ratio < 1.2 || ratio > 4 ? 'warn' : 'ok', `Mesh bulges ${M.amp.toFixed(1)} mm = ${ratio.toFixed(1)}× the line — about 1.3–4× opens clean gaps with a ${pr.nozzle} mm nozzle.`);
-    add(span > 14 ? 'bad' : span > 9 ? 'warn' : 'ok', `Each bulge bridges ~${span.toFixed(1)} mm of air (keep under ~9 mm; more openings around shortens it). Bulges print at 15 mm/s with the fan high.`);
+    add(span > 14 ? 'bad' : span > 9 ? 'warn' : 'ok', `Each bulge bridges ~${span.toFixed(1)} mm of air (keep under ~9 mm; more openings around shortens it). Every stretch over air prints at 15 mm/s with the fan high, held at both ends like a normal bridge.`);
   }
   if (P.mod.src === 'attract' && !P.mod.attrs.length) add('warn', 'Attractor source chosen but no points placed yet — tap the surface with the Attractor tool.');
   { // what it stands on while printing
@@ -1533,7 +1535,7 @@ function estimatePart(k) {
   const pr = state.print, w = lineW(pr.nozzle), fil = FILAMENTS[pr.filament], P = state[k], H = P.h * MM, layers = Math.floor(H / pr.layerH);
   let per = 0; for (let j = 0; j < 20; j++) per += TAU * sampleProf(P.prof, (j + .5) / 20) * MM; per /= 20;
   const zw = isZW(P), laps = zw ? Math.max(1, zwTable(P, 0, pr.layerH, H).T) : layers;
-  const sp = zw ? NET_SPEED(pr.nozzle).air * 1.35 : P.mesh.on ? Math.min(pr.speed, 30) : Math.min(pr.speed, fil.flow / (w * pr.layerH), per / 6) * .9;
+  const sp = zw ? NET_SPEED(pr.nozzle).air * 1.35 : P.mesh.on ? Math.min(pr.speed, 22) : Math.min(pr.speed, fil.flow / (w * pr.layerH), per / 6) * .9;
   const g = partMass(k).m * (zw ? Math.min(1, laps * pr.layerH * 1.35 / H) : 1);
   return { sec:laps * per / sp * 1.12 + 240, g, laps };
 }
@@ -1912,7 +1914,7 @@ function renderPanel() {
       const wl = lineW(state.print.nozzle);
       if (MS.mode === 'zwave') {
         const rM = Math.max(...P.prof) * MM;
-        slider(mz, 'Hole width', () => MS.holeW, v => MS.holeW = v, 2, 25, .1, v => `${v.toFixed(1)} mm · ${Math.round(Math.min(120, Math.max(6, Math.PI * rM / v)))} around`, rbz);
+        slider(mz, 'Hole width', () => MS.holeW, v => MS.holeW = v, 1.5, 8, .1, v => `${v.toFixed(1)} mm · ${Math.round(Math.min(120, Math.max(6, Math.PI * rM / v)))} around`, rbz);
         mz.append(el('div', { className:'sub', textContent:'Hole height up the shade', style:'margin:10px 0 2px' }));
         chips(mz, [['even', 'Even'], ['linear', 'Grow / shrink'], ['swell', 'Swell in middle']], MS.grad, v => { pushUndo(); MS.grad = v; rbz(); renderPanel(); });
         slider(mz, MS.grad === 'even' ? 'Hole height' : MS.grad === 'linear' ? 'Hole height · bottom' : 'Hole height · ends', () => MS.holeH, v => MS.holeH = v, 1, 20, .1, v => v.toFixed(1) + ' mm', rbz);
@@ -1928,7 +1930,7 @@ function renderPanel() {
       }
       slider(mz, 'Solid rims', () => MS.rim, v => MS.rim = v, 0, 20, .5, v => v + ' mm', rbz);
       mz.append(el('div', { className:'note', textContent:MS.mode === 'zwave'
-        ? 'Each lap waves up and down and sits on the crests of the lap below, shifted half a wave — the gaps between are real holes. See it in Path or Beads view.'
+        ? 'Experimental. Each lap waves up and down and lands on the crests of the lap below. Those crests are strands in mid-air, so keep holes small (about 3 mm wide); for bigger openings use In / out bulges, which print far more reliably.'
         : 'Bulging layers bridge over air and sag a little, opening the gaps (like Studio Wooj’s mesh). See it in Path or Beads view.' }));
     }
     const sn = section('Non-planar layers', 'Isocurve printing: layers bend up and down instead of staying flat. Layer height varies, so extrusion is scaled to keep the wall even.', '', { open:!!(P.np.mid || P.np.rim), status:(P.np.mid || P.np.rim) ? 'on' : 'off', on:!!(P.np.mid || P.np.rim) });
