@@ -170,6 +170,52 @@
     #start .filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px 14px;padding:0 14px}
     .tiles{grid-template-columns:1fr 1fr;gap:8px} .tile .tx span{font-size:18px}
   }
+
+  /* ── layout: settings column on the left, view on the right, print timeline along the bottom ── */
+  #panel{left:18px;right:auto;width:344px;background:#f6f5f1}
+  #body{padding:2px 12px 22px}
+  .sec{margin-top:10px;padding:13px 14px 12px;border:1px solid var(--line);border-top:1px solid var(--line);border-radius:4px;background:#fff}
+  .sec:first-child{padding-top:13px;border-top:1px solid var(--line);margin-top:12px}
+  .sec h3{font-size:19px}
+  #viewbar{left:380px}
+  #tools{left:calc(50% + 181px);bottom:150px}
+  #hint{left:calc(50% + 181px);bottom:204px}
+  #drawing{right:0;left:362px}
+  #dock{position:fixed;left:380px;right:18px;bottom:18px;z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 12px 10px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:6px}
+  #dock .r{display:flex;align-items:center;gap:8px;min-width:0}
+  #dock .lab{font:400 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dock .lab b{color:var(--ink);font-weight:400}
+  #dock .sp{flex:1}
+  #dock button{padding:5px 11px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  #dock select,#dock input[type=number]{font:400 12px var(--mono);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 8px}
+  #dock input[type=number]{width:70px;border-radius:3px}
+  #dkPlay{min-width:74px}
+  #dkScrub{flex:1;min-width:60px}
+  #dkBars{width:100%;height:44px;display:block;cursor:crosshair;touch-action:none}
+  #dkSel{display:none;align-items:center;gap:6px}
+  #dock.sel #dkSel{display:flex} #dock.sel #dkTip{display:none}
+  body.sim #tools,body.sim #hint{display:none}
+  #hud{position:fixed;left:calc(50% + 181px);transform:translateX(-50%);bottom:150px;z-index:5;display:none;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:400 10.5px var(--mono);letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+  #hud b{font:400 15px var(--mono);color:var(--ink);letter-spacing:0}
+  body.sim #hud{display:block}
+  body.drawing #dock,body.drawing #hud{display:none}
+  .tile.imp .th{display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .tile.imp .th svg{width:46%;height:46%}
+  @media (max-width:760px){
+    #panel{left:0;width:auto;background:#f6f5f1}
+    #viewbar{left:12px}
+    #dock{left:0;right:0;bottom:0;border-radius:10px 10px 0 0;padding:7px 10px calc(8px + env(safe-area-inset-bottom));gap:5px}
+    #dock .r1 .lab{font-size:9.5px}
+    #dkBars{height:30px}
+    #dock button{padding:5px 9px}
+    #dkTime{display:none} #dock.sel #dkInfo{display:none}
+    #tools{left:50%;bottom:calc(112px + env(safe-area-inset-bottom))} #hint{left:50%;bottom:calc(166px + env(safe-area-inset-bottom))}
+    #hud{left:50%;bottom:calc(112px + env(safe-area-inset-bottom));padding:5px 11px;font-size:9.5px} #hud .wide{display:none}
+    #dkCol{display:none} #dkUnit{display:none} #dock input[type=number]{width:56px} #dock .r1{gap:5px} #dock select{padding:4px 4px} #dkPlay{min-width:0} #dkTip{display:none}
+    #hud b{font-size:13px}
+    body.sim #tools,body.sim #hint{display:none}
+    #drawing{left:0}
+  }
 </style>
 <script type="importmap">
 { "imports": {
@@ -206,6 +252,16 @@
   <button id="editBtn" title="Edit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
 </div>
 <div id="drawing"></div>
+<div id="hud"></div>
+<div id="dock">
+  <div class="r r1"><span class="lab" id="dkInfo">Speed per layer</span><span class="lab" id="dkTip">· tap or drag across the bars to pick layers</span>
+    <span id="dkSel"><span class="lab" id="dkSelTxt"></span><input type="number" id="dkSpd" min="4" max="300" step="1" placeholder="mm/s"><span class="lab" id="dkUnit">mm/s</span><button id="dkSet">Set</button><button id="dkAuto" title="Back to the planned speeds">Auto</button><button id="dkClear" title="Clear selection">×</button></span>
+    <span class="sp"></span><span class="lab" id="dkTime"></span></div>
+  <div class="r r2"><button id="dkPlay">▶ Play</button><select id="dkMul" title="Playback speed"><option value="10">×10</option><option value="50">×50</option><option value="100" selected>×100</option><option value="300">×300</option><option value="1000">×1000</option></select>
+    <select id="dkCol" title="Colour"><option value="0">Colour · part</option><option value="1">Colour · speed</option></select>
+    <input type="range" id="dkScrub" min="0" max="1000" step="1" value="1000"><button id="dkExit" title="Back to the design">Design</button></div>
+  <canvas id="dkBars"></canvas>
+</div>
 <aside id="panel"><div id="grab"></div><div id="tabs"></div><div id="body"></div></aside>
 <div id="toast"></div>
 <div id="help"><div class="box">
@@ -217,10 +273,13 @@
     <li><span><b>Give it a surface.</b> Choose patterns, fade one into another, paint them on, or open the wall with holes (Surface tab).</span></li>
     <li><span><b>Check it.</b> The pill at the top left shows if it will print. Path shows the nozzle line, Beads the printed layers, Drawing a dimensioned section.</span></li>
     <li><span><b>Print it.</b> Choose printer, nozzle and filament, then download G-code or STL (Print tab).</span></li>
+    <li><span><b>Watch it print.</b> Play runs the real toolpath layer by layer. The bars along the bottom are each layer's speed: drag across them to set your own.</span></li>
+    <li><span><b>Your own model.</b> Import an STL (New → Your own model) and Monoline turns its outer surface into one line.</span></li>
     <li><span><b>Changed your mind?</b> Undo steps back; the round arrow resets the piece to how it started. The arrow-up button makes a link to share it.</span></li>
   </ol>
   <button id="helpClose" class="on" style="padding:9px 18px">Start designing</button>
   <p class="lead" style="margin:16px 0 0;font-size:12px">Made by <a href="https://davidficko.com" style="color:inherit">David Ficko</a></p>
+
 
 
 
@@ -230,7 +289,7 @@
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
   <div class="filters" id="startCats"></div>
   <div id="startBody"></div>
-  <div class="foot"><button id="startOpen">Open a design file…</button><button id="startHelp">How it works</button></div>
+  <div class="foot"><button id="startStl">Import STL…</button><button id="startOpen">Open a design file…</button><button id="startHelp">How it works</button></div>
 </div></div>
 <div id="share"><div class="box">
   <h2>Share this design</h2>
@@ -241,6 +300,7 @@
 <div id="busy">Working…</div>
 <input type="file" id="fileIn" accept=".json,application/json" hidden>
 <input type="file" id="imgIn" accept="image/*" hidden>
+<input type="file" id="stlIn" accept=".stl,model/stl,application/sla" hidden>
 
 <script type="module">
 import * as THREE from 'three';
@@ -357,7 +417,7 @@ function defaultState() {
   const L = LAMP_PRESETS.ember, V = VESSEL_PRESETS.helix;
   return { v:6, view:'path', risks:true, mode:'lamp', preset:'ember', vpreset:'helix', shade:clone(L.shade), base:clone(L.base), vessel:clone(V.vessel), saucer:SAUCER0(), planter:PLANTER0(),
     collar:'#b8b5ae', light:{ on:false, power:1, warmth:.35 }, lamp:{ ...LAMP0(), ...L.lamp },
-    print:{ printer:'x1c', nozzle:.4, filament:'pla', layerH:.2, speed:60, orient:'auto', brim:'auto', bottom:4, abl:true, part:'shade', layerLines:true, customStart:'' } };
+    print:{ printer:'x1c', nozzle:.4, filament:'pla', layerH:.2, speed:60, orient:'auto', brim:'auto', bottom:4, spd:{}, abl:true, part:'shade', layerLines:true, customStart:'' } };
 }
 function upgrade(s) {
   const d = defaultState();
@@ -387,7 +447,7 @@ const undoStack = [], redoStack = [];
 function pushUndo() { flushMasks(); undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); redoStack.length = 0; syncUndo(); }
 function syncUndo() { undoBtn.disabled = !undoStack.length; redoBtn.disabled = !redoStack.length; }
 let saveT;
-function persist() { clearTimeout(saveT); saveT = setTimeout(() => { flushMasks(); try { localStorage.setItem('monoline.v1', JSON.stringify(state)); } catch (e) {} }, 500); }
+function persist() { if (typeof simDirty === 'function' && SIM.key && SIM.key !== simKey()) simDirty(); clearTimeout(saveT); saveT = setTimeout(() => { flushMasks(); try { localStorage.setItem('monoline.v1', JSON.stringify(state)); } catch (e) {} }, 500); }
 
 /* ═════════════════════ paint masks ═════════════════════ */
 const maskCache = {};
@@ -518,13 +578,73 @@ function sectF(P, th, v) {
   return n2 === S.n ? a : a + (polyF(n2, k, t) - a) * smooth(0, 1, v);
 }
 const sectMin = P => { if (!sectOn(P)) return 1; const S = P.sect, c = n => n >= 2 ? Math.cos(Math.min(.95, S.k) * Math.PI / n) : 1; return Math.min(c(S.n), c(S.n2 < 0 ? S.n : S.n2)); };
-// radius multiplier around the form: petals × cross-section. A lamp shade stays round where it meets the socket.
+// Imported model: its outer surface stored as radius ÷ profile, 256 directions × 161 heights (Uint16, base64)
+const fieldCache = new Map();
+function fieldArr(Fd) {
+  let a = fieldCache.get(Fd.d); if (a) return a;
+  const bin = atob(Fd.d), u = new Uint16Array(bin.length / 2);
+  for (let i = 0; i < u.length; i++) u[i] = bin.charCodeAt(i * 2) | bin.charCodeAt(i * 2 + 1) << 8;
+  a = Float32Array.from(u, x => x / 16384); if (fieldCache.size > 6) fieldCache.clear(); fieldCache.set(Fd.d, a); return a;
+}
+function fieldF(P, th, v) {
+  const Fd = P.field; if (!Fd) return 1;
+  const a = fieldArr(Fd), nt = Fd.nt, nv = Fd.nv;
+  let u = th / TAU % 1; if (u < 0) u += 1;
+  const x = u * nt, i0 = Math.floor(x) % nt, i1 = (i0 + 1) % nt, fx = x - Math.floor(x);
+  const y = Math.min(nv - 1, Math.max(0, v * (nv - 1))), j0 = Math.min(nv - 2, Math.floor(y)), fy = y - j0;
+  const r = (a[j0 * nt + i0] * (1 - fx) + a[j0 * nt + i1] * fx) * (1 - fy) + (a[(j0 + 1) * nt + i0] * (1 - fx) + a[(j0 + 1) * nt + i1] * fx) * fy;
+  return 1 + (r - 1) * (Fd.s ?? 1);
+}
+const fieldMax = P => P.field ? 1 + (P.field.max - 1) * (P.field.s ?? 1) : 1;
+const rMaxOf = P => Math.max(...P.prof) * (1 + P.lobeAmt) * fieldMax(P);
+// radius multiplier around the form: petals × cross-section × imported shape. A lamp shade stays round where it meets the socket.
 function lobeF(P, th, v = 0) {
-  let f = (1 + P.lobeAmt * Math.cos(Math.round(P.lobes) * th)) * sectF(P, th, v);
+  let f = (1 + P.lobeAmt * Math.cos(Math.round(P.lobes) * th)) * sectF(P, th, v) * fieldF(P, th, v);
   if (f !== 1 && P === state.shade) f = 1 + (f - 1) * smooth(.02, .3, state.lamp.layout === 'bell' ? v : 1 - v);
   return f;
 }
-const minF = P => (1 - P.lobeAmt) * sectMin(P);
+const minF = P => (1 - P.lobeAmt) * sectMin(P) * (P.field ? 1 + (P.field.min - 1) * (P.field.s ?? 1) : 1);
+// Turn an STL (triangles, mm, Z up) into a profile + shape field. Every height is cut, and from the vertical axis we keep
+// the farthest wall in each of 256 directions: the outer surface, which is what a single continuous line can print.
+function stlToField(T, NT = 256, NV = 161) {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+  for (let i = 0; i < T.length; i += 3) { const x = T[i], y = T[i + 1], z = T[i + 2]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z; }
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, H = z1 - z0; if (!(H > 0)) throw new Error('flat');
+  const Fm = new Float32Array(NT * NV), zAt = j => z0 + H * (.002 + .996 * j / (NV - 1)), dz = H * .996 / (NV - 1);
+  const hit = (j, ax, ay, bx, by) => {   // segment of the cut at row j (centred, STL frame): widest crossing per direction
+    const t1 = -Math.atan2(ay, ax); let dl = -Math.atan2(by, bx) - t1; dl -= TAU * Math.round(dl / TAU);
+    const lo = Math.min(t1, t1 + dl), hi = Math.max(t1, t1 + dl), dx = bx - ax, dy = by - ay;
+    for (let b = Math.ceil(lo / TAU * NT); b <= Math.floor(hi / TAU * NT); b++) {
+      const th = b / NT * TAU, ux = Math.cos(th), uy = -Math.sin(th), den = ux * dy - uy * dx; if (Math.abs(den) < 1e-12) continue;
+      const r = (ax * dy - ay * dx) / den, o = j * NT + ((b % NT) + NT) % NT; if (r > Fm[o]) Fm[o] = r;
+    }
+  };
+  for (let i = 0; i < T.length; i += 9) {
+    const za = T[i + 2], zb = T[i + 5], zc = T[i + 8], lo = Math.min(za, zb, zc), hi = Math.max(za, zb, zc);
+    const jA = Math.max(0, Math.ceil((lo - zAt(0)) / dz)), jB = Math.min(NV - 1, Math.floor((hi - zAt(0)) / dz));
+    for (let j = jA; j <= jB; j++) {
+      const z = zAt(j), q = [];
+      for (const [p, r] of [[0, 3], [3, 6], [6, 0]]) { const pz = T[i + p + 2], rz = T[i + r + 2]; if ((pz <= z) !== (rz <= z)) { const t = (z - pz) / (rz - pz); q.push(T[i + p] + t * (T[i + r] - T[i + p]) - cx, T[i + p + 1] + t * (T[i + r + 1] - T[i + p + 1]) - cy); } }
+      if (q.length === 4) hit(j, q[0], q[1], q[2], q[3]);
+    }
+  }
+  const mean = new Float32Array(NV), full = [];
+  for (let j = 0; j < NV; j++) {   // close gaps in each cut by going round to the nearest found wall on either side
+    const row = Fm.subarray(j * NT, (j + 1) * NT), got = []; for (let b = 0; b < NT; b++) if (row[b] > 0) got.push(b);
+    if (got.length < NT * .1) continue; full.push(j);
+    for (let g = 0; g < got.length; g++) { const a = got[g], c = got[(g + 1) % got.length], n = ((c - a + NT) % NT) || NT; for (let s = 1; s < n; s++) row[(a + s) % NT] = row[a] + (row[c] - row[a]) * s / n; }
+    let m = 0; for (let b = 0; b < NT; b++) m += row[b]; mean[j] = m / NT;
+  }
+  if (full.length < 2) throw new Error('empty');
+  for (let j = 0; j < NV; j++) if (!mean[j]) { const n = full.reduce((a, b) => Math.abs(b - j) < Math.abs(a - j) ? b : a); Fm.copyWithin(j * NT, n * NT, (n + 1) * NT); mean[j] = mean[n]; }
+  const pr = prof(v => { const y = v * (NV - 1), j = Math.min(NV - 2, Math.floor(y)), f = y - j; return (mean[j] * (1 - f) + mean[j + 1] * f) / MM; });
+  const u = new Uint16Array(NT * NV); let mn = 9, mx = 0;
+  for (let j = 0; j < NV; j++) { const base = sampleProf(pr, j / (NV - 1)) * MM; for (let b = 0; b < NT; b++) { const r = Math.min(3.99, Fm[j * NT + b] / base); u[j * NT + b] = Math.round(r * 16384); mn = Math.min(mn, r); mx = Math.max(mx, r); } }
+  const by = new Uint8Array(u.buffer); let t = ''; for (let i = 0; i < by.length; i += 8192) t += String.fromCharCode.apply(null, by.subarray(i, i + 8192));
+  return { h:H / MM, prof:pr, field:{ nt:NT, nv:NV, d:btoa(t), s:1, min:+mn.toFixed(4), max:+mx.toFixed(4) }, size:[x1 - x0, y1 - y0, H] };
+}
+// Layer speeds you set yourself: [from, to, mm/s] in mm above the bed, per part
+function spdAt(k, z) { const L = state.print.spd?.[k]; if (L) for (const [a, b, v] of L) if (z >= a && z < b) return v; return 0; }
 // matching saucer: follows the pot's foot with a few mm to spare
 function fitSaucer() {
   const V = state.vessel, S = state.saucer, pl = state.planter, w = lineW(state.print.nozzle), hS = Math.max(8, pl.rim), H = V.h * MM;
@@ -558,7 +678,7 @@ function meshMM(P, th, lap, zMM, Hmm) {
 // The wave is zero at θ = 0, where the spiral passes from one lap to the next, so the line stays continuous.
 const isZW = P => !!(P.mesh && P.mesh.on && P.mesh.mode === 'zwave');
 // Net hole size (mm) → number of waves around (hole width = half a wave at the widest point) and wave amplitude (hole ≈ 4 × amplitude tall)
-const zwN = P => Math.min(120, Math.max(6, Math.round(Math.PI * Math.max(...P.prof) * MM / Math.max(1, P.mesh.holeW))));
+const zwN = P => Math.min(120, Math.max(6, Math.round(Math.PI * rMaxOf(P) * MM / Math.max(1, P.mesh.holeW))));
 function zwHoleH(P, z, Hmm, flip = false) { // hole height (mm) at a height, following the chosen gradient
   const M = P.mesh, u0 = Math.min(1, Math.max(0, (z - M.rim) / Math.max(1, Hmm - 2 * M.rim))), u = flip ? 1 - u0 : u0;
   if (M.grad === 'linear') return M.holeH + (M.holeH2 - M.holeH) * u;
@@ -602,7 +722,7 @@ function resFor(P) {
   const layered = tex.some(t => t === 'rings' || t === 'woven' || t === 'diamond' || t === 'wave' || t === 'knurl');
   const rings = layered && amp ? Math.min(Math.max(Math.round(Math.max(P.layers, P.b.layers) * 6), 120), 420) : 150;
   const segs = amp ? Math.min(Math.max(Math.round(Math.max(P.freq, P.b.freq) * 10), 180), 560) : Math.max(160, P.lobes * 24);
-  return { rings, segs };
+  return P.field ? { rings:Math.max(rings, 320), segs:Math.max(segs, P.field.nt) } : { rings, segs };
 }
 const partY0 = k => k === 'shade' ? (state.lamp.layout === 'pendant' ? PEND_Y : state.base.h + ringH(FITTINGS[state.lamp.fitting] || FITTINGS.e27))
   : k === 'vessel' && state.mode === 'vessel' && state.planter.on ? Math.max(1, Math.round(state.print.bottom)) * state.print.layerH / MM : 0;   // the pot stands on the saucer's floor
@@ -663,7 +783,7 @@ function buildPrinted(k, geom) {
   const lh = pr.layerH / MM, w = lineW(pr.nozzle) / MM, H = P.h, y0 = partY0(k);
   const zw = isZW(P), tb = zw ? zwTable(P, 0, pr.layerH, H * MM) : null, NW = zw ? zwN(P) : 0;
   const layers = zw ? Math.max(2, tb.T) : Math.max(2, Math.floor(H / lh));
-  const rMax = Math.max(...P.prof) * (1 + P.lobeAmt);
+  const rMax = rMaxOf(P);
   let segs = Math.round(Math.min(480, Math.max(96, Math.max(P.freq, P.b.freq) * 8, TAU * rMax * MM / .8, NW * 16)));
   const budget = (globalThis.innerWidth || 1200) <= 760 ? 70000 : 140000;   // lighter on phones
   while (layers * segs > budget && segs > 64) segs = Math.floor(segs * .9);
@@ -803,7 +923,7 @@ controls.target.set(0, .85, 0); controls.minDistance = .8; controls.maxDistance 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   renderer.setSize(w, h); camera.aspect = w / h;
-  camera.setViewOffset(w, h, innerWidth > 760 ? 170 : 0, innerWidth > 760 ? 0 : 50, w, h);
+  camera.setViewOffset(w, h, innerWidth > 760 ? -181 : 0, innerWidth > 760 ? 66 : 92, w, h);
   camera.updateProjectionMatrix(); requestRender();
 }
 addEventListener('resize', resize);
@@ -823,7 +943,7 @@ function strideNow() {
 function buildPathLines(k) {
   const pr = state.print, P = state[k], m = getMask(k), lh = pr.layerH / MM, w = lineW(pr.nozzle) / MM, H = P.h, y0 = partY0(k);
   const zw = isZW(P), tb = zw ? zwTable(P, 0, pr.layerH, H * MM) : null, NW = zw ? zwN(P) : 0;
-  const layers = zw ? Math.max(2, tb.T) : Math.max(2, Math.floor(H / lh)), rMax = Math.max(...P.prof) * (1 + P.lobeAmt);
+  const layers = zw ? Math.max(2, tb.T) : Math.max(2, Math.floor(H / lh)), rMax = rMaxOf(P);
   const segs = Math.round(Math.min(360, Math.max(96, Math.max(P.freq, P.b.freq) * 6, TAU * rMax * MM / 1.2, NW * 12)));
   const sel = []; for (let L = 0; L < layers; L += pathStride) sel.push(L); if (sel[sel.length - 1] !== layers - 1) sel.push(layers - 1);
   const pos = new Float32Array(sel.length * segs * 6), col = new Float32Array(sel.length * segs * 6);
@@ -877,6 +997,7 @@ function schedulePrinted(k) {
 }
 function rebuild(which = 'all', keepPath = false) {
   if (!keepPath) clearPath();
+  if (typeof simExit === 'function') { simExit(); simDirty(); }
   const list = which === 'all' ? parts() : [which];
   if (state.mode === 'vessel' && state.planter.on && state.planter.auto && which !== 'saucer') { fitSaucer(); if (!list.includes('saucer')) list.push('saucer'); }
   for (const k of list) {
@@ -944,12 +1065,12 @@ function applyLook() {
 function frameCamera() {
   // fit the whole object: centre on it and pull the camera back so height and width both fit
   let y0 = Infinity, y1 = 0, r = 0;
-  for (const k of parts()) { const P = state[k], a = partY0(k); y0 = Math.min(y0, a); y1 = Math.max(y1, a + P.h); r = Math.max(r, Math.max(...P.prof) * (1 + P.lobeAmt)); }
+  for (const k of parts()) { const P = state[k], a = partY0(k); y0 = Math.min(y0, a); y1 = Math.max(y1, a + P.h); r = Math.max(r, rMaxOf(P)); }
   if (state.mode === 'lamp') { y0 = Math.min(y0, state.lamp.layout === 'pendant' ? PEND_Y : 0); y1 = Math.max(y1, lampTop()); }
   const cy = (y0 + y1) / 2, fov = camera.fov * Math.PI / 180, W = stage.clientWidth, Hh = stage.clientHeight;
-  const asp = innerWidth > 760 ? Math.max(.4, (W - 380) / Hh) : W / (Hh * .78);
+  const asp = innerWidth > 760 ? Math.max(.4, (W - 380) / (Hh - 150)) : W / (Hh * .62);
   const span = Math.max(y1 - y0 + r * .7, r * 2.15 / asp);
-  const d = Math.min(12, Math.max(1, span / 2 / Math.tan(fov / 2) * (innerWidth > 760 ? 1.32 : 1.75)));
+  const d = Math.min(12, Math.max(1, span / 2 / Math.tan(fov / 2) * (innerWidth > 760 ? 1.5 : 2.05)));
   const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
   controls.target.set(0, cy, 0); camera.position.copy(controls.target).addScaledVector(dir, d); controls.update(); requestRender();
 }
@@ -965,7 +1086,7 @@ function setRay(e) {
 function hitTest(ray) { // analytic march against surfaces of revolution
   let best = null; const p = new THREE.Vector3();
   for (const k of parts()) {
-    const P = state[k], y0 = partY0(k), m = getMask(k), maxR = Math.max(...P.prof) * (1 + P.lobeAmt) + Math.max(P.amp, P.b.amp) + .02;
+    const P = state[k], y0 = partY0(k), m = getMask(k), maxR = rMaxOf(P) + Math.max(P.amp, P.b.amp) + .02;
     const steps = 360, t1 = camera.position.distanceTo(controls.target) + 4, dt = t1 / steps;
     const vAt = (y, th) => { let v = (y - y0) / P.h; for (let it = 0; it < 3; it++) v = (y - y0 - warpMM(P, k, th, Math.min(1, Math.max(0, v))) / MM) / P.h; return v; };
     const inside = t => { ray.at(t, p); const rr = Math.hypot(p.x, p.z); if (rr > maxR) return false; const th = Math.atan2(p.z, p.x), v = vAt(p.y, th); if (v < 0 || v > 1) return false; return rr <= sampleProf(P.prof, v) * lobeF(P, th, v) + Math.max(P.amp, P.b.amp) * .5; };
@@ -1105,16 +1226,16 @@ function toolpath(k) {
   const R = (th, z) => surfR(P, flip ? -th : th, vOf(z), m) * MM - w / 2; // nozzle centre sits half a line inside the surface
   const fil = FILAMENTS[pr.filament];
   const maxSeg = Math.max(P.freq, P.b.freq) * 10;
-  const rMax = Math.max(...P.prof) * (1 + P.lobeAmt) * MM;
+  const rMax = rMaxOf(P) * MM;
   const segs = Math.min(1800, Math.max(240, Math.round(TAU * rMax / .7), maxSeg, isZW(P) ? zwN(P) * 24 : 0));
-  const X = [], Y = [], Z = [], E = [], F = [], K = [];
+  const X = [], Y = [], Z = [], E = [], F = [], K = [], LAY = []; let curL = 0;
   const area = (w - lh) * lh + Math.PI * (lh / 2) ** 2, eK = .98 / (Math.PI * .875 * .875);
   const zLim = printer.zSpeed || 10, rateLim = 200;   // Z axis mm/s · G-code lines per second the printer can digest smoothly
   let px = 0, py = 0, pz = 0;
   const push = (x, y, z, kind, feed, flowScale = 1) => {
     const d = Math.hypot(x - px, y - py, z - pz), dz = Math.abs(z - pz);
     if (!kind && d > 1e-6) { if (dz > 1e-4) feed = Math.min(feed, zLim * d / dz); feed = Math.max(4, Math.min(feed, rateLim * d)); }
-    X.push(x); Y.push(y); Z.push(z); K.push(kind); F.push(feed);
+    X.push(x); Y.push(y); Z.push(z); K.push(kind); F.push(feed); LAY.push(curL);
     E.push(kind ? 0 : d * area * eK * flowScale); px = x; py = y; pz = z;
   };
   const thM = th => flip ? -th : th;
@@ -1132,7 +1253,7 @@ function toolpath(k) {
     for (let b = nBrim; b >= 1; b--) for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, lh / 2) + b * w * .96 * slant[s]; push(r * Math.cos(th), r * Math.sin(th), lh, b === nBrim && s === 0 ? 1 : 0, 25); } }
   // 1) solid bottom layers: outer loop + concentric loops inward, one continuous line per layer
   for (let L = 0; L < bottom; L++) {
-    const z = (L + 1) * lh, zc = z - lh / 2, feed = L === 0 ? 25 : 50;
+    const z = (L + 1) * lh, zc = z - lh / 2, feed = spdAt(k, zc) || (L === 0 ? 25 : 50); curL = L;
     let ring = 0, first = !(L === 0 && nBrim);
     while (true) {
       const off = ring * w * .96; let minR = Infinity; const pts = [];
@@ -1149,7 +1270,7 @@ function toolpath(k) {
     z0 = lh;
     for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, lh / 2); push(r * Math.cos(th), r * Math.sin(th), lh, s === 0 && !nBrim ? 1 : 0, 20); }
   } else {
-    const r = R(0, z0 + lh / 2); push(r, 0, z0, 1, 120);
+    curL = bottom; const r = R(0, z0 + lh / 2); push(r, 0, z0, 1, 120);
   }
   // 3) the spiral: z climbs continuously, one revolution per layer, never lifts or stops
   const tb = zw ? zwTable(P, z0 - lh, lh, H, flip) : null, NW = zw ? zwN(P) : 0;
@@ -1168,7 +1289,9 @@ function toolpath(k) {
   const rA = new Float32Array(segs + 1), hA = new Float32Array(segs + 1), pA = new Float32Array(segs + 1), dA = new Float32Array(segs + 1);
   const win = Math.max(1, Math.round(.8 / (TAU * rMax / segs)));   // press ramps in and out over ~0.8 mm
   for (let rv = 0; rv < revs; rv++) {
-    const cap = Math.max(6, Math.min(wallSpeed, revLen[rv] / minLayer)); // every lap takes ≥ 6 s (8 s for perforated walls) so it can cool
+    curL = Math.max(bottom, 1) + rv;
+    const ov = spdAt(k, zw ? tb.Z[rv] : z0 + rv * lh + lh / 2);   // a speed you set for this layer replaces the planned one (still under the flow limit)
+    const cap = ov ? Math.min(ov, fil.flow / (w * lh)) : Math.max(6, Math.min(wallSpeed, revLen[rv] / minLayer)); // every lap takes ≥ 6 s (8 s for perforated walls) so it can cool
     if (zw) {
       for (let s = 1; s <= segs; s++) {
         const t = rv + s / segs, th = s / segs * TAU;
@@ -1198,7 +1321,8 @@ function toolpath(k) {
       lapR[s] = r; prevAir[s] = mesh && hang > .5 ? 1 : 0; prevD[s] = d;
     }
   }
-  return { X, Y, Z, E, F, K, flip, H, lh, w, segs, revs, bottom, wallSpeed, brim:nBrim, zLim };
+  for (let i = 0; i < Y.length; i++) Y[i] = -Y[i];   // printer XY = the view seen from above (a rotation, not a mirror image)
+  return { X, Y, Z, E, F, K, LAY, flip, H, lh, w, segs, revs, bottom, wallSpeed, brim:nBrim, zLim };
 }
 function pathStats(tp) {
   let t = 0, e = 0, ox = tp.X[0], oy = tp.Y[0], oz = tp.Z[0];
@@ -1217,7 +1341,7 @@ function showPath() {
   const y0 = partY0(k), c0 = new THREE.Color(0x121211), c1 = new THREE.Color(0x86827a), c = new THREE.Color();
   for (let i = 0; i < n; i++) {
     const zm = tp.flip ? tp.H - tp.Z[i] : tp.Z[i];
-    pos[i * 3] = tp.X[i] / MM; pos[i * 3 + 1] = y0 + zm / MM; pos[i * 3 + 2] = (tp.flip ? -tp.Y[i] : tp.Y[i]) / MM;
+    pos[i * 3] = tp.X[i] / MM; pos[i * 3 + 1] = y0 + zm / MM; pos[i * 3 + 2] = (tp.flip ? tp.Y[i] : -tp.Y[i]) / MM;
     c.lerpColors(c0, c1, (Math.sin(i / tp.segs * .9) + 1) / 2); if (tp.K[i]) c.set(0x5a8cff);
     col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
   }
@@ -1250,6 +1374,10 @@ function checks(k) {
   const fv = v => Math.round((partFlip(k) ? 1 - v : v) * 100);
   add(worst > 52 ? 'bad' : worst > 45 ? 'warn' : 'ok', `Steepest overhang of the outline ${worst.toFixed(0)}° at ${fv(at)}% of the print height (past ~45° the wall starts to droop).`);
   // the real test: how far each layer steps sideways from the one it sits on — outline, cross-section and texture together
+  for (const [a, b, v] of state.print.spd?.[k] || []) {   // speeds you set per layer
+    const mid = Math.min(H, (a + b) / 2), vv = partFlip(k) ? 1 - mid / H : mid / H, lap = TAU * sampleProf(P.prof, Math.min(1, Math.max(0, vv))) * MM, t = lap / v;
+    add(t < 5 ? 'warn' : 'ok', `Your speed: ${v} mm/s from ${a.toFixed(1)} to ${Math.min(b, H).toFixed(1)} mm above the bed` + (t < 5 ? ` — a lap there takes only ${t.toFixed(1)} s, too little to cool, so it may slump.` : '.'));
+  }
   const st = layerStep(k), ratio = st.mm / w;
   add(ratio > .6 ? 'bad' : ratio > .5 ? 'warn' : 'ok', `Each layer rests on the one below: the biggest sideways step is ${st.mm.toFixed(2)} mm (${Math.round(ratio * 100)}% of the ${w} mm line) at ${fv(st.v)}% of the print height. Over ~50% the line has nothing under it and the print fails there.`);
   // texture detail vs line width
@@ -1587,7 +1715,7 @@ const VIEW_NAMES = { path:'Path · the nozzle line on the design', printed:'Bead
 let drawT;
 function renderDrawing() { $('#drawing').innerHTML = drawingSVG(); }
 function scheduleDrawing() { clearTimeout(drawT); drawT = setTimeout(renderDrawing, 120); }
-function setView(v) { state.view = v; document.body.classList.toggle('drawing', v === 'drawing'); busy(() => { rebuild(); applyLook(); renderPanel(); if (v === 'drawing') renderDrawing(); toast(VIEW_NAMES[v]); }); }
+function setView(v) { simExit(); state.view = v; document.body.classList.toggle('drawing', v === 'drawing'); busy(() => { rebuild(); applyLook(); renderPanel(); if (v === 'drawing') renderDrawing(); toast(VIEW_NAMES[v]); }); }
 document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => setView(b.dataset.view));
 const toastEl = $('#toast'); let toastT;
 function toast(m) { toastEl.textContent = m; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2200); }
@@ -1639,7 +1767,7 @@ const thumbEl = (p, lamp) => el('span', { className:'th', innerHTML:thumbSVG(p, 
 let origin = null;
 function markOrigin() { flushMasks(); origin = JSON.stringify(state); try { localStorage.setItem('monoline.origin', origin); } catch (e) {} }
 function applyPreset(mode, k) {
-  pushUndo(); const lamp = mode === 'lamp', p = (lamp ? LAMP_PRESETS : VESSEL_PRESETS)[k]; state.mode = mode;
+  pushUndo(); const lamp = mode === 'lamp', p = (lamp ? LAMP_PRESETS : VESSEL_PRESETS)[k]; state.mode = mode; state.print.spd = {}; SIM.sel = null;
   if (lamp) { state.preset = k; state.lamp = { ...state.lamp, own:false, ...p.lamp }; state.shade = clone(p.shade); state.base = clone(p.base); delete maskCache.shade; delete maskCache.base; fitToFitting(); }
   else { state.vpreset = k; state.vessel = clone(p.vessel); state.planter = { ...PLANTER0(), ...(p.planter || {}) }; state.saucer = SAUCER0(p.vessel.color); delete maskCache.vessel; delete maskCache.saucer; if (state.planter.on) fitSaucer(); }
   ui.surf = parts()[0]; if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape';
@@ -1648,12 +1776,17 @@ function applyPreset(mode, k) {
 }
 // ── start screen ──
 const CATS = [['all', 'All'], ['table', 'Table lamps'], ['pendant', 'Pendant shades'], ['shade', 'Shades for your lamp'], ['vase', 'Vases'], ['bowl', 'Bowls'], ['planter', 'Planters']];
-const catOf = (p, lamp) => lamp ? (p.lamp.layout === 'pendant' ? 'pendant' : p.lamp.own ? 'shade' : 'table') : p.cat;
+const catOf = (p, lamp) => lamp ? (p.lamp.layout === 'pendant' ? 'pendant' : p.lamp.own ? 'shade' : 'table') : p.cat || 'vase';
 const startEl = $('#start');
 function renderStart() {
   const cats = $('#startCats'), bodyS = $('#startBody'); cats.innerHTML = ''; bodyS.innerHTML = '';
   for (const [k, n] of CATS) { const b = el('button', { textContent:n }); b.classList.toggle('on', ui.cat === k); b.onclick = () => { ui.cat = k; renderStart(); }; cats.append(b); }
   const all = [...Object.entries(LAMP_PRESETS).map(([k, p]) => ({ k, p, lamp:true })), ...Object.entries(VESSEL_PRESETS).map(([k, p]) => ({ k, p, lamp:false }))].filter(x => ui.cat === 'all' || catOf(x.p, x.lamp) === ui.cat);
+  if (ui.cat === 'all') {
+    const t = el('button', { className:'tile imp' }, [el('span', { className:'th', innerHTML:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>' }), el('span', { className:'tx' }, [el('span', { textContent:'Your own model' }), el('small', { textContent:'Import an STL · it becomes one continuous line' })])]);
+    t.onclick = () => $('#stlIn').click();
+    bodyS.append(el('h4', { textContent:'Your own' }), el('div', { className:'tiles' }, [t]));
+  }
   for (const [title, list] of [['Ready to print', all.filter(x => x.p.studio)], ['Simple forms to make your own', all.filter(x => !x.p.studio)]]) {
     if (!list.length) continue;
     const g = el('div', { className:'tiles' });
@@ -1671,6 +1804,7 @@ $('#newBtn').onclick = () => showStart(true);
 document.querySelector('header h1').onclick = () => showStart(true);
 $('#startClose').onclick = () => showStart(false);
 $('#startOpen').onclick = () => $('#fileIn').click();
+$('#startStl').onclick = () => $('#stlIn').click();
 $('#startHelp').onclick = () => showHelp(true);
 // ── reset: back to how this piece started (the preset, opened file or shared link) ──
 $('#resetBtn').onclick = () => {
@@ -1718,8 +1852,183 @@ $('#shareClose').onclick = () => shareEl.classList.remove('show');
 shareEl.addEventListener('click', e => { if (e.target === shareEl) shareEl.classList.remove('show'); });
 $('#shareCopy').onclick = async () => { const i = $('#shareUrl'); try { await navigator.clipboard.writeText(i.value); toast('Link copied'); } catch (e) { i.focus(); i.select(); try { document.execCommand('copy'); toast('Link copied'); } catch (e2) { toast('Select the link and copy it'); } } };
 $('#shareSys').onclick = async () => { try { await navigator.share({ title:'Monoline design', url:$('#shareUrl').value }); } catch (e) {} };
+/* ── print playback: the real toolpath as beads, layer by layer ── */
+const SIM = { data:null, key:'', on:false, playing:false, time:0, sel:null, mesh:null, T:null };
+const simMat = new THREE.MeshStandardMaterial({ roughness:.75, side:THREE.DoubleSide });
+const SU = { uCur:{ value:-1 }, uMode:{ value:0 }, uHi:{ value:new THREE.Color(0xff5a1f) }, uSlow:{ value:new THREE.Color(0x2f4fb5) }, uFast:{ value:new THREE.Color(0xe9e4d8) } };
+simMat.onBeforeCompile = sh => {
+  Object.assign(sh.uniforms, SU);
+  sh.vertexShader = 'attribute float aL; attribute float aS; varying float vL; varying float vS;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vL = aL; vS = aS;');
+  sh.fragmentShader = 'uniform float uCur; uniform float uMode; uniform vec3 uHi; uniform vec3 uSlow; uniform vec3 uFast; varying float vL; varying float vS;\n' + sh.fragmentShader.replace('#include <color_fragment>',
+    '#include <color_fragment>\n diffuseColor.rgb = mix(diffuseColor.rgb, mix(uSlow, uFast, clamp(vS, 0., 1.)), uMode);\n diffuseColor.rgb = mix(diffuseColor.rgb, uHi, 1. - step(.5, abs(vL - uCur)));');
+};
+const nozzle = new THREE.Group(); { const c = new THREE.Mesh(new THREE.ConeGeometry(.011, .03, 20), new THREE.MeshStandardMaterial({ color:0x121211, roughness:.5 })); c.rotation.x = Math.PI; c.position.y = .015; nozzle.add(c); const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, .03, 0), new THREE.Vector3(0, .22, 0)]), new THREE.LineBasicMaterial({ color:0x121211 })); nozzle.add(l); }
+nozzle.visible = false; scene.add(nozzle);
+const simKey = () => printPart() + '|' + JSON.stringify(state.print) + '|' + undoStack.length + '|' + editStamp;
+let editStamp = 0, simT;
+function simDirty() { editStamp++; SIM.data = null; drawBars(); clearTimeout(simT); simT = setTimeout(simCompute, 900); }
+function simCompute(force = false) {
+  clearTimeout(simT);
+  if (!force && (interacting() || state.view === 'drawing' || document.hidden)) { simT = setTimeout(simCompute, 600); return; }
+  const key = simKey(); if (SIM.data && SIM.key === key) return SIM.data;
+  const k = printPart(), tp = toolpath(k), n = tp.X.length, t = new Float64Array(n);
+  let nL = 0; for (let i = 0; i < n; i++) nL = Math.max(nL, tp.LAY[i] + 1);
+  const L0 = new Int32Array(nL).fill(-1), L1 = new Int32Array(nL), lt = new Float64Array(nL), ll = new Float64Array(nL), zs = new Float64Array(nL), zc = new Float64Array(nL);
+  for (let i = 0; i < n; i++) {
+    const d = i ? Math.hypot(tp.X[i] - tp.X[i - 1], tp.Y[i] - tp.Y[i - 1], tp.Z[i] - tp.Z[i - 1]) : 0, dt = d / (tp.K[i] ? 200 : tp.F[i]);
+    t[i] = (i ? t[i - 1] : 0) + dt; const L = tp.LAY[i]; if (L0[L] < 0) L0[L] = i; L1[L] = i; lt[L] += dt; if (!tp.K[i]) ll[L] += d; zs[L] += tp.Z[i]; zc[L]++;
+  }
+  const sp = Float32Array.from(lt, (x, L) => x ? ll[L] / x : 0), zm = Float32Array.from(zs, (x, L) => x / Math.max(1, zc[L]));
+  const own = Uint8Array.from(zm, z => spdAt(k, z) ? 1 : 0);
+  SIM.data = { k, tp, n, t, total:t[n - 1] + 240, nL, L0, L1, sp, zm, own, maxF:Math.max(...sp, 10) };
+  SIM.key = key; SIM.time = SIM.on ? Math.min(SIM.time, t[n - 1]) : t[n - 1]; SIM.mesh = null;
+  if (SIM.sel && SIM.sel[1] >= nL) SIM.sel = null;
+  drawBars(); dockInfo(); if (SIM.on) simShow();
+  return SIM.data;
+}
+function simGeometry(D) {   // a bead along the toolpath: four sides (out, top, in, bottom), decimated to keep phones smooth
+  const { tp, n } = D, budget = innerWidth <= 760 ? 90000 : 260000, step = Math.max(1, Math.ceil(n / budget)), keep = [];
+  for (let i = 0; i < n; i++) if (i % step === 0 || tp.K[i] || (i + 1 < n && tp.K[i + 1]) || tp.LAY[i] !== tp.LAY[Math.max(0, i - 1)] || i === n - 1) keep.push(i);
+  const m = keep.length, pos = new Float32Array(m * 12), nor = new Float32Array(m * 12), aL = new Float32Array(m * 4), aS = new Float32Array(m * 4), segStart = new Int32Array(m);
+  const up = 1, w = tp.w / 2 / MM, h = tp.lh / 2 / MM;
+  const P = i => [tp.X[i] / MM, tp.Z[i] / MM, -tp.Y[i] / MM];   // on the bed, as the printer builds it (a flipped part shows upside down)
+  for (let q = 0; q < m; q++) {
+    const i = keep[q], a = P(keep[Math.max(0, q - 1)]), b = P(keep[Math.min(m - 1, q + 1)]), p = P(i);
+    let nx = b[2] - a[2], nz = -(b[0] - a[0]); const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l; if (nx * p[0] + nz * p[2] < 0) { nx = -nx; nz = -nz; }
+    const v = [[p[0] + nx * w, p[1], p[2] + nz * w, nx, 0, nz], [p[0] - nx * w * .2, p[1] + up * h, p[2] - nz * w * .2, nx * .3, up, nz * .3], [p[0] - nx * w, p[1], p[2] - nz * w, -nx, 0, -nz], [p[0] - nx * w * .2, p[1] - up * h, p[2] - nz * w * .2, nx * .3, -up, nz * .3]];
+    for (let c = 0; c < 4; c++) { pos.set(v[c].slice(0, 3), (q * 4 + c) * 3); nor.set(v[c].slice(3), (q * 4 + c) * 3); aL[q * 4 + c] = tp.LAY[i]; aS[q * 4 + c] = tp.F[i] / D.maxF; }
+  }
+  const idx = []; for (let q = 0; q + 1 < m; q++) { segStart[q] = idx.length; if (tp.K[keep[q + 1]]) continue; const A = q * 4, B = A + 4; for (let c = 0; c < 4; c++) { const c1 = (c + 1) % 4; idx.push(A + c, B + c, A + c1, A + c1, B + c, B + c1); } }
+  segStart[m - 1] = idx.length;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('aL', new THREE.BufferAttribute(aL, 1)); g.setAttribute('aS', new THREE.BufferAttribute(aS, 1)); g.setIndex(idx.length > 65535 ? new THREE.Uint32BufferAttribute(idx, 1) : new THREE.Uint16BufferAttribute(idx, 1));
+  return { g, keep, segStart, P };
+}
+function simShow() {
+  const D = SIM.data || simCompute(true); if (!D) return;
+  if (!SIM.mesh) { if (SIM.obj) { scene.remove(SIM.obj); SIM.obj.geometry.dispose(); } SIM.mesh = simGeometry(D); SIM.obj = new THREE.Mesh(SIM.mesh.g, simMat); scene.add(SIM.obj); }
+  simMat.color.set(state[D.k].color); SU.uMode.value = +$('#dkCol').value;
+  for (const m of Object.values(meshes)) m.visible = false; collarMesh.visible = false; hwGroup.visible = false; attrGroup.visible = false;
+  for (const k in pathObjs) pathObjs[k].visible = false;
+  if (!SIM.on) { const cy = D.tp.H / 2 / MM, dy = cy - controls.target.y; controls.target.y = cy; camera.position.y += dy; controls.update(); }   // look at the part on the bed
+  SIM.obj.visible = true; nozzle.visible = true; SIM.on = true; document.body.classList.add('sim'); simAt(SIM.time);
+}
+function simExit() {
+  if (!SIM.on) return; SIM.on = false; SIM.playing = false; document.body.classList.remove('sim');
+  if (SIM.obj) SIM.obj.visible = false; nozzle.visible = false; hwGroup.visible = true; attrGroup.visible = true;
+  for (const k in pathObjs) pathObjs[k].visible = true;
+  const lamp = state.mode === 'lamp';
+  meshes.shade.visible = collarMesh.visible = lamp; meshes.base.visible = lamp && parts().includes('base'); meshes.vessel.visible = !lamp; meshes.saucer.visible = !lamp && state.planter.on;
+  for (const k of parts()) if (state.view === 'path' && isZW(state[k])) meshes[k].visible = false;
+  dockPlayBtn(); frameCamera(); requestRender();
+}
+function simAt(time) {   // put the nozzle where it is at this moment and draw everything printed before it
+  const D = SIM.data; if (!D) return; SIM.time = Math.max(0, Math.min(D.t[D.n - 1], time));
+  let lo = 0, hi = D.n - 1; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (D.t[mid] <= SIM.time) lo = mid; else hi = mid - 1; }
+  const i = lo, M = SIM.mesh;
+  if (M && SIM.on) {
+    let a = 0, b = M.keep.length - 1; while (a < b) { const mid = (a + b + 1) >> 1; if (M.keep[mid] <= i) a = mid; else b = mid - 1; }
+    M.g.setDrawRange(0, M.segStart[a]); const p = M.P(i); nozzle.position.set(p[0], p[1] + D.tp.lh / 2 / MM, p[2]);
+    SU.uCur.value = D.tp.LAY[i];
+  }
+  const L = D.tp.LAY[i], tp = D.tp, f = tp.K[i] ? 0 : tp.F[i];
+  $('#hud').innerHTML = `<b>${f.toFixed(1)}</b> mm/s · layer ${L + 1}/${D.nL}<span class="wide"> · line ${tp.w} mm · flow ${(f * tp.w * tp.lh).toFixed(1)} mm³/s · ${(tp.Z[i]).toFixed(1)} mm up</span> · ${hms(SIM.time + 240)} / ${hms(D.total)}`;
+  $('#dkScrub').value = Math.round(SIM.time / D.t[D.n - 1] * 1000); SIM.cur = L; drawBars(); requestRender();
+}
+const hms = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
+function simPlay(start) {
+  const D = SIM.data || busyCompute(); if (!D) return;
+  if (SIM.playing && !start) { SIM.playing = false; dockPlayBtn(); return; }
+  if (!SIM.on) { if (SIM.time >= D.t[D.n - 1] - .5) SIM.time = 0; simShow(); }
+  else if (SIM.time >= D.t[D.n - 1] - .5) SIM.time = 0;
+  SIM.playing = true; dockPlayBtn(); let last = performance.now();
+  const tick = now => { if (!SIM.playing || !SIM.on) return; const dt = Math.min(.1, (now - last) / 1000); last = now; simAt(SIM.time + dt * +$('#dkMul').value);
+    if (SIM.time >= D.t[D.n - 1]) { SIM.playing = false; dockPlayBtn(); return; } requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function busyCompute() { $('#busy').classList.add('show'); try { return simCompute(true); } finally { $('#busy').classList.remove('show'); } }
+function dockPlayBtn() { $('#dkPlay').textContent = SIM.playing ? '❚❚ Pause' : '▶ Play'; $('#dkExit').style.display = SIM.on ? '' : 'none'; }
+function dockInfo() {
+  const D = SIM.data, sel = SIM.sel, dock = $('#dock'); dock.classList.toggle('sel', !!sel);
+  $('#dkInfo').innerHTML = D ? `Speed per layer · <b>${PART_NAMES(D.k)}</b> · ${D.nL} layers` : 'Speed per layer · planning…';
+  $('#dkTime').innerHTML = D ? `Print <b>${hms(D.total)}</b>` : '';
+  if (sel && D) { let t = 0, l = 0; for (let L = sel[0]; L <= sel[1]; L++) { const x = D.sp[L] ? 1 : 0; t += x; l += D.sp[L]; }
+    $('#dkSelTxt').innerHTML = `Layer${sel[0] === sel[1] ? '' : 's'} <b>${sel[0] + 1}${sel[0] === sel[1] ? '' : '–' + (sel[1] + 1)}</b> · now <b>${(l / Math.max(1, t)).toFixed(0)}</b> mm/s →`; }
+}
+function drawBars() {
+  const c = $('#dkBars'), dpr = Math.min(2, devicePixelRatio || 1), W = c.clientWidth, H = c.clientHeight; if (!W) return;
+  if (c.width !== W * dpr || c.height !== H * dpr) { c.width = W * dpr; c.height = H * dpr; }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  const D = SIM.data;
+  if (!D) { g.fillStyle = '#86827a'; g.font = '10px "IBM Plex Mono", monospace'; g.fillText('PLANNING THE TOOLPATH…', 2, H / 2 + 3); return; }
+  const bw = W / D.nL, top = Math.max(D.maxF, state.print.speed) * 1.05;
+  for (let L = 0; L < D.nL; L++) {
+    const x = L * bw, h = Math.max(1.5, D.sp[L] / top * (H - 2)), sel = SIM.sel && L >= SIM.sel[0] && L <= SIM.sel[1];
+    g.fillStyle = sel ? '#3d6bff' : D.own[L] ? '#121211' : '#cbc3b4'; g.fillRect(x, H - h, Math.max(1, bw - (bw > 3 ? 1 : 0)), h);
+  }
+  if (SIM.on && SIM.cur != null) { g.fillStyle = '#ff5a1f'; g.fillRect(SIM.cur * bw - .5, 0, Math.max(2, bw), H); }
+}
+{ // tap or drag across the bars to pick layers
+  const c = $('#dkBars'); let a = null;
+  const at = e => { const D = SIM.data; if (!D) return null; const r = c.getBoundingClientRect(); return Math.max(0, Math.min(D.nL - 1, Math.floor((e.clientX - r.left) / r.width * D.nL))); };
+  c.addEventListener('pointerdown', e => { if (!SIM.data && !busyCompute()) return; a = at(e); c.setPointerCapture(e.pointerId); SIM.sel = [a, a]; dockInfo(); drawBars(); });
+  c.addEventListener('pointermove', e => { if (a == null) return; const b = at(e); SIM.sel = [Math.min(a, b), Math.max(a, b)]; dockInfo(); drawBars(); });
+  c.addEventListener('pointerup', () => { if (a == null) return; a = null; const D = SIM.data; SIM.playing = false; SIM.time = D.t[D.L1[SIM.sel[1]]]; simShow(); dockPlayBtn(); dockInfo(); const s = $('#dkSpd'); s.value = ''; s.placeholder = Math.round(D.sp[SIM.sel[1]]) || 'mm/s'; if (innerWidth > 760) s.focus(); });
+}
+function setLayerSpeed(v) {   // store as heights above the bed, so it survives small changes to the design
+  const D = SIM.data, sel = SIM.sel; if (!D || !sel) return;
+  const lh = state.print.layerH, a = +(D.zm[sel[0]] - lh / 2).toFixed(3), b = +(D.zm[sel[1]] + lh / 2).toFixed(3), k = D.k;
+  pushUndo(); const spd = state.print.spd = { ...(state.print.spd || {}) }, out = [];
+  for (const [x, y, s2] of spd[k] || []) { if (y <= a || x >= b) out.push([x, y, s2]); else { if (x < a) out.push([x, a, s2]); if (y > b) out.push([b, y, s2]); } }
+  if (v) out.push([a, b, v]); out.sort((p, q) => p[0] - q[0]); spd[k] = out; if (!out.length) delete spd[k];
+  editStamp++; persist(); scheduleStatus(); const on = SIM.on, keep = SIM.sel; busyCompute(); SIM.sel = keep; if (on) simShow(); dockInfo(); if (ui.tab === 'print') renderPanel();
+  toast(v ? `Layers ${sel[0] + 1}–${sel[1] + 1} print at ${v} mm/s` : 'Back to the planned speeds');
+}
+$('#dkSet').onclick = () => { const v = Math.round(+$('#dkSpd').value); if (!(v >= 4 && v <= 300)) { toast('Type a speed between 4 and 300 mm/s'); return; } setLayerSpeed(v); };
+$('#dkSpd').addEventListener('keydown', e => { if (e.key === 'Enter') $('#dkSet').onclick(); });
+$('#dkAuto').onclick = () => setLayerSpeed(0);
+$('#dkClear').onclick = () => { SIM.sel = null; dockInfo(); drawBars(); };
+$('#dkPlay').onclick = () => simPlay(false);
+$('#dkExit').onclick = () => simExit();
+$('#dkCol').onchange = () => { SU.uMode.value = +$('#dkCol').value; requestRender(); };
+$('#dkScrub').oninput = () => { const D = SIM.data || busyCompute(); if (!D) return; SIM.playing = false; if (!SIM.on) simShow(); simAt($('#dkScrub').value / 1000 * D.t[D.n - 1]); dockPlayBtn(); };
+addEventListener('resize', () => drawBars());
+/* ── import an STL ── */
+function parseSTL(buf) {
+  const dv = new DataView(buf), n = buf.byteLength >= 84 ? dv.getUint32(80, true) : -1;
+  if (n > 0 && 84 + n * 50 === buf.byteLength) { const T = new Float32Array(n * 9); for (let i = 0; i < n; i++) for (let q = 0; q < 9; q++) T[i * 9 + q] = dv.getFloat32(84 + i * 50 + 12 + q * 4, true); return T; }
+  const txt = new TextDecoder().decode(buf), out = [], re = /vertex\s+(\S+)\s+(\S+)\s+(\S+)/g; let m;
+  while ((m = re.exec(txt))) out.push(+m[1], +m[2], +m[3]);
+  if (out.length < 9 || out.some(x => !isFinite(x))) throw new Error('not stl'); return new Float32Array(out.length - out.length % 9).map((_, i) => out[i]);
+}
+function flipField(P) {
+  const Fd = P.field, a = fieldArr(Fd), nt = Fd.nt, nv = Fd.nv, u = new Uint16Array(nt * nv);
+  for (let j = 0; j < nv; j++) for (let b = 0; b < nt; b++) u[j * nt + b] = Math.round(a[(nv - 1 - j) * nt + b] * 16384);
+  const by = new Uint8Array(u.buffer); let t = ''; for (let i = 0; i < by.length; i += 8192) t += String.fromCharCode.apply(null, by.subarray(i, i + 8192));
+  P.field = { ...Fd, d:btoa(t) }; P.prof = P.prof.slice().reverse();
+}
+async function importSTL(file) {
+  await busy(async () => {
+    try {
+      let T = parseSTL(await file.arrayBuffer()); let R = stlToField(T);
+      const pr = PRINTERS[state.print.printer], [sx, sy, sz] = R.size, fit = Math.min(1, Math.min(...pr.bed) * .92 / Math.max(sx, sy), pr.maxZ * .95 / sz);
+      let note = '';
+      if (fit < 1) { T = T.map(x => x * fit); R = stlToField(T); note = ` · scaled to ${Math.round(fit * 100)}% to fit the ${pr.name}`; }
+      pushUndo(); state.mode = 'vessel'; state.vpreset = 'import'; state.planter = PLANTER0(); state.print.spd = {}; SIM.sel = null;
+      const V = part(R.h, R.prof, PLAIN(), PLAIN(), '#d9d2c5'); V.field = { ...R.field, name:file.name.replace(/\.stl$/i, '') };
+      state.vessel = V; state.saucer = SAUCER0(V.color); delete maskCache.vessel; delete maskCache.saucer;
+      ui.surf = 'vessel'; ui.tab = 'shape'; ui.started = true; showStart(false);
+      markOrigin(); rebuild(); applyLook(); frameCamera(); renderAll();
+      const D = R.size.map(x => Math.round(x * Math.min(1, fit)));
+      toast(`${D[0]} × ${D[1]} × ${D[2]} mm imported${note}`);
+    } catch (e) { toast('Could not read that STL'); }
+  });
+}
+$('#stlIn').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importSTL(f); };
+addEventListener('dragover', e => { e.preventDefault(); });
+addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (!f) return; if (/\.stl$/i.test(f.name)) importSTL(f); else if (/\.json$/i.test(f.name)) { const dt = new DataTransfer(); dt.items.add(f); $('#fileIn').files = dt.files; $('#fileIn').onchange({ target:$('#fileIn') }); } });
 function normalizeLamp() { const L = state.lamp; if (LAYOUTS[L.layout]) return; L.layout = 'pendant'; L.fitting = 'e27'; L.bulb = 'a60'; fitProf(state.shade, 'pendant', 'e27', lineW(state.print.nozzle)); easeSlope(state.shade); if (state.print.part === 'base') state.print.part = 'shade'; }
-function loadState(s) { state = upgrade(s); normalizeLamp(); for (const k in maskCache) delete maskCache[k]; for (const k in imgCache) delete imgCache[k]; if (!parts().includes(ui.surf)) ui.surf = parts()[0]; if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape'; }
+function loadState(s) { state = upgrade(s); normalizeLamp(); for (const k in maskCache) delete maskCache[k]; for (const k in imgCache) delete imgCache[k]; if (!parts().includes(ui.surf)) ui.surf = parts()[0]; if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape'; if (typeof SIM !== 'undefined') SIM.sel = null; }
 undoBtn.onclick = () => { if (!undoStack.length) return; flushMasks(); redoStack.push(JSON.stringify(state)); loadState(JSON.parse(undoStack.pop())); syncUndo(); rebuild(); applyLook(); renderAll(); };
 redoBtn.onclick = () => { if (!redoStack.length) return; flushMasks(); undoStack.push(JSON.stringify(state)); loadState(JSON.parse(redoStack.pop())); syncUndo(); rebuild(); applyLook(); renderAll(); };
 addEventListener('keydown', e => {
@@ -1833,6 +2142,16 @@ function renderPanel() {
       grid.append(el('span', { textContent:`Ø AT ${Math.round(v * DP.h * MM)}` }), inp, el('span', { textContent:'mm' }));
     }
     sd.append(grid);
+    if (state[dk].field) { // imported model
+      const Fd = state[dk].field, si = section('Imported model', Fd.name || 'Your STL', '', { open:true });
+      slider(si, 'Detail', () => Fd.s ?? 1, v => Fd.s = v, 0, 1, .01, v => v >= .995 ? 'as modelled' : Math.round(v * 100) + '%', () => rebuild(dk));
+      const row = el('div', { className:'chips' });
+      const bf = el('button', { textContent:'Flip upside down' }); bf.onclick = () => { pushUndo(); flipField(state[dk]); rebuild(); frameCamera(); renderPanel(); };
+      const br = el('button', { textContent:'Replace…' }); br.onclick = () => $('#stlIn').click();
+      const bx = el('button', { textContent:'Make it round' }); bx.onclick = () => { pushUndo(); delete state[dk].field; rebuild(); renderPanel(); toast('Kept the outline, dropped the imported detail'); };
+      row.append(bf, br, bx); si.append(row);
+      si.append(el('div', { className:'note', textContent:'Monoline prints the outer surface as one continuous line. Details inside, and parts that fold back in under themselves, are not printed. Sculpt, textures and holes all work on top.' }));
+    }
     // cross-section
     const SP = state[dk], S = SP.sect, son = sectOn(SP), rs = () => rebuild(dk);
     const SHAPES = [[0, 'Round'], [2, 'Oval'], [3, 'Triangle'], [4, 'Square'], [5, 'Pentagon'], [6, 'Hexagon'], [8, 'Octagon']];
@@ -1978,6 +2297,7 @@ function renderPanel() {
     const b5 = el('button', { textContent:'Share a link to this design…' }); b5.onclick = () => $('#shareBtn').onclick();
     const b6 = el('button', { textContent:'Reset to how this piece started' }); b6.onclick = () => $('#resetBtn').onclick();
     const b4 = el('button', { textContent:'New piece…' }); b4.onclick = () => showStart(true);
+    const b7 = el('button', { textContent:'Import an STL…' }); b7.onclick = () => $('#stlIn').click(); st.append(b7);
     st.append(b2, b3, b5, b6, b4); s.append(st);
   }
 }
@@ -2032,6 +2352,7 @@ function renderPrint() {
   chips(s2, NOZZLES.map(n => [n, n + ' mm']), pr.nozzle, n => { pushUndo(); pr.nozzle = n; pr.layerH = +(n * .5).toFixed(2); pr.speed = n === .4 ? 60 : n === .6 ? 50 : 40; pr.bottom = Math.max(2, Math.ceil(.9 / pr.layerH)); busy(() => { if (state.mode === 'lamp') fitToFitting(); const ch = parts().map(adaptToNozzle).some(Boolean); rebuild(); rr(); if (ch) toast(`Patterns coarsened to suit the ${n} mm nozzle`); }); });
   slider(s2, 'Layer height', () => pr.layerH, v => pr.layerH = v, +(pr.nozzle * .25).toFixed(2), +(pr.nozzle * .75).toFixed(2), .01, v => v.toFixed(2) + ' mm', () => { updateBadge(); applyLook(); if (state.view === 'printed') parts().forEach(schedulePrinted); if (state.view === 'path') rebuildPaths(); });
   onCommit = () => renderPanel();
+  s2.append(el('div', { className:'note', textContent:'Set the speed of single layers with the bars along the bottom: tap or drag across them, type mm/s, Set.' }));
   slider(s2, 'Wall speed', () => pr.speed, v => pr.speed = v, 15, 200, 1, v => { const cap = FILAMENTS[pr.filament].flow / (lineW(pr.nozzle) * pr.layerH); return v > cap ? `${v} → ${Math.round(cap)} mm/s (flow limit)` : v + ' mm/s'; });
   const sv = section('View', 'Path draws the nozzle line on your design. Beads builds the printed layers at this height and width.');
   chips(sv, [['path', 'Path'], ['printed', 'Beads'], ['surface', 'Surface']], state.view, v => setView(v));
@@ -2074,8 +2395,8 @@ function renderPrint() {
 
   const se = section('Export');
   const st = el('div', { className:'stack' });
-  const bp = el('button', { textContent:pathLine ? 'Hide toolpath' : 'Preview toolpath (the one line)' });
-  bp.onclick = () => busy(() => { if (pathLine) { clearPath(); requestRender(); } else { const tp = showPath(); toast(`${tp.revs} spiral laps, ${tp.X.filter((_, i) => tp.K[i]).length} travel moves`); } renderPanel(); });
+  const bp = el('button', { textContent:'▶ Play the print · watch the one line being laid' });
+  bp.onclick = () => { simPlay(true); openPanel(false); };
   const pn = { shade:'shade', base:'base', vessel:state.planter.on ? 'pot' : 'vessel', saucer:'saucer' };
   st.append(bp);
   for (const kk of parts()) {
@@ -2197,7 +2518,7 @@ $('#helpBtn').onclick = () => showHelp(true);
 $('#helpClose').onclick = () => { showHelp(false); try { localStorage.setItem('monoline.help', '1'); } catch (e) {} };
 help.addEventListener('click', e => { if (e.target === help) $('#helpClose').onclick(); });
 renderAll(); setTool('grab'); syncUndo(); document.body.classList.toggle('drawing', state.view === 'drawing'); if (state.view === 'drawing') setTimeout(renderDrawing, 50);
-rebuild(); applyLook(); resize(); frameCamera();
+rebuild(); applyLook(); resize(); frameCamera(); dockPlayBtn(); dockInfo(); drawBars();
 if (/^#d=/.test(location.hash)) openShared(); else if (!hadSaved) showStart(true);
 </script>
 </body>
