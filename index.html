@@ -284,6 +284,7 @@
 
 
 
+
 </div></div>
 <div id="start"><div class="in">
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
@@ -357,6 +358,12 @@ const VESSEL_PRESETS = {
     vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.4, lobes:48, rings:1, bumps:2, width:1, stagger:true, rim:6 }) },
   terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
     vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .0035, 40, 36), PLAIN(), '#c96a3b') },
+  bronto:{ studio:true, cat:'figure', fig:'bronto', name:'Bronto', note:'Long-neck dinosaur · fine weave · hollow',
+    vessel:part(1, prof(v => .3), pat('woven', .0022, 48, 60), PLAIN(), '#9fc9a5') },
+  rex:{ studio:true, cat:'figure', fig:'rex', name:'Rex', note:'T-rex · knurled scales · hollow',
+    vessel:part(1, prof(v => .3), pat('knurl', .0022, 72, 60, .2), PLAIN(), '#ef7d5a') },
+  spino:{ studio:true, cat:'figure', fig:'spino', name:'Spino', note:'Sail-back dinosaur · smooth body melting into coil',
+    vessel:part(1, prof(v => .3), PLAIN(), pat('rings', .0025, 40, 90), '#8fb8e8', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.45, soft:.18 }) },
   quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
     vessel:part(1.0, prof(v => .46 + .14 * Math.pow(v, .8)), PLAIN(), pat('knurl', .003, 64, 30), '#7f8f7a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.55, soft:.12 }, { n:4, k:.75 }) },
 };
@@ -374,7 +381,7 @@ function easeSlope(P, deg = 45) {
   for (let i = iMax + 1; i < N; i++) pr[i] = +Math.min(Math.max(pr[i], pr[i - 1] - maxD), pr[i - 1] + maxD).toFixed(4);
   for (let i = iMax - 1; i >= 0; i--) pr[i] = +Math.min(Math.max(pr[i], pr[i + 1] - maxD), pr[i + 1] + maxD).toFixed(4);
 }
-for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k]) easeSlope(p[k], 40);
+for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k] && !p.fig) easeSlope(p[k], 40);
 
 const PRINTERS = {
   a1mini:{ name:'A1 mini', bed:[180,180], maxZ:180, zSpeed:10, park:[10,170], purgeY:4 },
@@ -584,7 +591,7 @@ function fieldArr(Fd) {
   let a = fieldCache.get(Fd.d); if (a) return a;
   const bin = atob(Fd.d), u = new Uint16Array(bin.length / 2);
   for (let i = 0; i < u.length; i++) u[i] = bin.charCodeAt(i * 2) | bin.charCodeAt(i * 2 + 1) << 8;
-  a = Float32Array.from(u, x => x / 16384); if (fieldCache.size > 6) fieldCache.clear(); fieldCache.set(Fd.d, a); return a;
+  const q = Fd.q || 16384; a = Float32Array.from(u, x => x / q); if (fieldCache.size > 6) fieldCache.clear(); fieldCache.set(Fd.d, a); return a;
 }
 function fieldF(P, th, v) {
   const Fd = P.field; if (!Fd) return 1;
@@ -637,12 +644,65 @@ function stlToField(T, NT = 256, NV = 161) {
   }
   if (full.length < 2) throw new Error('empty');
   for (let j = 0; j < NV; j++) if (!mean[j]) { const n = full.reduce((a, b) => Math.abs(b - j) < Math.abs(a - j) ? b : a); Fm.copyWithin(j * NT, n * NT, (n + 1) * NT); mean[j] = mean[n]; }
+  return { ...fieldFromGrid(Fm, NT, NV, H), size:[x1 - x0, y1 - y0, H] };
+}
+// radii (mm) for NT directions × NV heights → profile (the mean radius) + shape field (radius ÷ profile)
+function fieldFromGrid(Fm, NT, NV, H) {
+  const mean = new Float32Array(NV);
+  for (let j = 0; j < NV; j++) { let m = 0; for (let b = 0; b < NT; b++) m += Fm[j * NT + b]; mean[j] = m / NT; }
   const pr = prof(v => { const y = v * (NV - 1), j = Math.min(NV - 2, Math.floor(y)), f = y - j; return (mean[j] * (1 - f) + mean[j + 1] * f) / MM; });
   const u = new Uint16Array(NT * NV); let mn = 9, mx = 0;
-  for (let j = 0; j < NV; j++) { const base = sampleProf(pr, j / (NV - 1)) * MM; for (let b = 0; b < NT; b++) { const r = Math.min(3.99, Fm[j * NT + b] / base); u[j * NT + b] = Math.round(r * 16384); mn = Math.min(mn, r); mx = Math.max(mx, r); } }
+  for (let j = 0; j < NV; j++) { const base = sampleProf(pr, j / (NV - 1)) * MM; for (let b = 0; b < NT; b++) { const r = Math.min(7.99, Fm[j * NT + b] / base); u[j * NT + b] = Math.round(r * 8192); mn = Math.min(mn, r); mx = Math.max(mx, r); } }
   const by = new Uint8Array(u.buffer); let t = ''; for (let i = 0; i < by.length; i += 8192) t += String.fromCharCode.apply(null, by.subarray(i, i + 8192));
-  return { h:H / MM, prof:pr, field:{ nt:NT, nv:NV, d:btoa(t), s:1, min:+mn.toFixed(4), max:+mx.toFixed(4) }, size:[x1 - x0, y1 - y0, H] };
+  return { h:H / MM, prof:pr, field:{ nt:NT, nv:NV, q:8192, d:btoa(t), s:1, min:+mn.toFixed(4), max:+mx.toFixed(4) } };
 }
+/* ── figures: a cross-section per height made of soft ellipses (mm; x = forward, y = sideways), blended with a soft maximum.
+   Seen from the centre line every direction meets the outline once, so each layer is one closed loop: the piece is hollow and
+   prints as one line. Every height may lean at most ~38° from the one below, so legs, tail and head grow out of the body. ── */
+function blobExit(x, y, a, b, th) {   // distance from the centre line to the far side of an ellipse, along direction th (0 if missed)
+  if (a <= .2 || b <= .2) return 0;
+  const ux = Math.cos(th), uy = Math.sin(th), A = ux * ux / (a * a) + uy * uy / (b * b), B = -2 * (ux * x / (a * a) + uy * y / (b * b)), C = x * x / (a * a) + y * y / (b * b) - 1, D = B * B - 4 * A * C;
+  return D < 0 ? 0 : Math.max(0, (-B + Math.sqrt(D)) / (2 * A));
+}
+function fieldFromFn(blobs, H, NT = 256, NV = 161, deg = 38, rMin = 7) {
+  const Fm = new Float32Array(NT * NV), dz = H / (NV - 1), maxD = Math.tan(deg * Math.PI / 180) * dz;
+  for (let j = 0; j < NV; j++) {
+    const z = j * dz, bl = blobs(z);
+    for (let b = 0; b < NT; b++) { const th = b / NT * TAU; let sum = 0; for (const q of bl) { const e = blobExit(q[0], q[1], q[2], q[3], th); sum += e ** 8; } Fm[j * NT + b] = Math.max(rMin, sum ** (1 / 8)); }
+    if (j) for (let b = 0; b < NT; b++) { const p = Fm[(j - 1) * NT + b], o = j * NT + b; Fm[o] = Math.min(p + maxD, Math.max(p - maxD, Fm[o])); }   // lean ≤ 38° from the layer below
+  }
+  for (let j = 0; j < NV; j++) for (let pass = 0; pass < 2; pass++) for (let b = 0; b < NT; b++) { const o = j * NT; Fm[o + b] = (Fm[o + (b + NT - 1) % NT] + 2 * Fm[o + b] + Fm[o + (b + 1) % NT]) / 4; }   // soften creases around
+  return fieldFromGrid(Fm, NT, NV, H);
+}
+const up = (z, a, b) => smooth(a, b, z), dn = (z, a, b) => 1 - smooth(a, b, z), bump = (z, a, b) => Math.sin(Math.PI * Math.min(1, Math.max(0, (z - a) / (b - a))));
+const FIGURES = {
+  // long neck straight up the centre line, body and tail behind, four stubby legs, a wedge head looking forward
+  bronto:[175, z => [
+    ...[[14, 13], [14, -13], [-30, 14], [-30, -14]].map(([x, y]) => [x, y, 9.5 * dn(z, 34, 46), 9 * dn(z, 34, 46)]),
+    [-12, 0, 40 * Math.sqrt(bump(z, 26, 90)), 22 * Math.sqrt(bump(z, 26, 90))],
+    [-66 + 44 * up(z, 0, 50), 0, 28 * dn(z, 30, 52), 10 * dn(z, 34, 52)],
+    [2, 0, 11.5 * up(z, 60, 70) * dn(z, 148, 156), 10.5 * up(z, 60, 70) * dn(z, 148, 156)],
+    [8 + 16 * bump(z, 132, 175), 0, 9 + 15 * bump(z, 132, 175), 8.5 + 3 * bump(z, 132, 175)]]],
+  // upright: big feet, a thick tail on the ground behind, pear body, small arms, a large boxy head reaching forward
+  rex:[170, z => [
+    ...[13, -13].map(y => [9, y, 18 * dn(z, 8, 14), 8.5 * dn(z, 8, 14)]),
+    ...[12, -12].map(y => [-2, y, 11 + 6 * bump(z, 18, 64), 9 + 2.5 * bump(z, 18, 64)]),
+    [-62 + 52 * up(z, 0, 62), 0, 32 * dn(z, 36, 64), 12 * dn(z, 42, 64)],
+    [-6, 0, 24 * bump(z, 40, 120), 17 * bump(z, 40, 120)],
+    ...[10, -10].map(y => [20, y, 8 * bump(z, 84, 98), 4 * bump(z, 84, 98)]),
+    [6, 0, 12 * up(z, 98, 106), 11 * up(z, 98, 106)],
+    [12 + 20 * bump(z, 104, 170), 0, 12 + 20 * bump(z, 104, 170), 10 + 3 * bump(z, 104, 170)]]],
+  // upright, with a tall scalloped sail along its back and a long slim snout
+  spino:[185, z => [
+    ...[12, -12].map(y => [8, y, 16 * dn(z, 8, 14), 7.5 * dn(z, 8, 14)]),
+    ...[11, -11].map(y => [-2, y, 10 + 4.5 * bump(z, 18, 58), 8 + 2 * bump(z, 18, 58)]),
+    [-62 + 54 * up(z, 0, 62), 0, 32 * dn(z, 36, 64), 10 * dn(z, 42, 64)],
+    [-4, 0, 20 * bump(z, 40, 128), 15 * bump(z, 40, 128)],
+    [-22 - 20 * bump(z, 46, 150) * (.7 + .3 * Math.cos((z - 46) / 104 * Math.PI * 7)), 0, 16 + 20 * bump(z, 46, 150), 4.6 * up(z, 46, 56) * dn(z, 140, 150)],
+    [3, 0, 10 * up(z, 112, 120), 9 * up(z, 112, 120)],
+    [10 + 22 * bump(z, 122, 185), 0, 10 + 22 * bump(z, 122, 185), 8 + 1.5 * bump(z, 122, 185)]]],
+};
+for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) { const [H, fn] = FIGURES[p.fig], R = fieldFromFn(fn, H); Object.assign(p.vessel, { h:R.h, prof:R.prof, field:{ ...R.field, name:p.name } }); }
 // Layer speeds you set yourself: [from, to, mm/s] in mm above the bed, per part
 function spdAt(k, z) { const L = state.print.spd?.[k]; if (L) for (const [a, b, v] of L) if (z >= a && z < b) return v; return 0; }
 // matching saucer: follows the pot's foot with a few mm to spare
@@ -1745,7 +1805,7 @@ function thumbSVG(p, lamp) {
     items.push({ P:p.shade, y:pend ? 0 : hb + F.h - 18 });
     if (pend) extra.push(['cord', p.shade.h * u, p.shade.h * u + 45]); else if (L.own) extra.push(['stand', hb + F.h - 18]);
   } else { if (p.planter?.on) items.push({ P:saucerFor(p.vessel), y:0 }); items.push({ P:p.vessel, y:p.planter?.on ? 1 : 0 }); }
-  for (const it of items) { top = Math.max(top, it.y + it.P.h * u); rMax = Math.max(rMax, Math.max(...it.P.prof) * u); }
+  for (const it of items) { top = Math.max(top, it.y + it.P.h * u); rMax = Math.max(rMax, Math.max(...it.P.prof) * u * fieldMax(it.P)); }
   for (const e of extra) if (e[0] === 'cord') top = Math.max(top, e[2]); else rMax = Math.max(rMax, 60);
   const sc = Math.min(84 / top, 84 / (rMax * 2)), X = r => 50 + r * sc, Y = y => 92 - y * sc, f = n => n.toFixed(1), o = [];
   for (const e of extra) {
@@ -1754,10 +1814,10 @@ function thumbSVG(p, lamp) {
   }
   for (const { P, y } of items) {
     const n = 36, H = P.h * u, L = [], R = [];
-    for (let j = 0; j <= n; j++) { const r = sampleProf(P.prof, j / n) * u, yy = f(Y(y + j / n * H)); L.push(`${f(X(-r))} ${yy}`); R.push(`${f(X(r))} ${yy}`); }
+    for (let j = 0; j <= n; j++) { const v = j / n, r = sampleProf(P.prof, v) * u, yy = f(Y(y + v * H)); L.push(`${f(X(-r * fieldF(P, Math.PI, v)))} ${yy}`); R.push(`${f(X(r * fieldF(P, 0, v)))} ${yy}`); }
     o.push(`<path d="M${L.join('L')}L${R.reverse().join('L')}Z" fill="${P.color}" fill-opacity=".5" stroke="#121211" stroke-width="1" stroke-linejoin="round"/>`);
     const lines = Math.max(2, Math.round(H * sc / 4.2)); let d = '';
-    for (let i = 1; i < lines; i++) { const v = i / lines, r = sampleProf(P.prof, v) * u; d += `M${f(X(-r))} ${f(Y(y + v * H))}H${f(X(r))}`; }
+    for (let i = 1; i < lines; i++) { const v = i / lines, r = sampleProf(P.prof, v) * u; d += `M${f(X(-r * fieldF(P, Math.PI, v)))} ${f(Y(y + v * H))}H${f(X(r * fieldF(P, 0, v)))}`; }
     o.push(`<path d="${d}" stroke="#121211" stroke-width=".55" opacity=".42" fill="none"${P.mesh?.on ? ' stroke-dasharray="2.4 2"' : ''}/>`);
   }
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${o.join('')}</svg>`;
@@ -1775,7 +1835,7 @@ function applyPreset(mode, k) {
   markOrigin(); rebuild(); applyLook(); frameCamera(); renderAll();
 }
 // ── start screen ──
-const CATS = [['all', 'All'], ['table', 'Table lamps'], ['pendant', 'Pendant shades'], ['shade', 'Shades for your lamp'], ['vase', 'Vases'], ['bowl', 'Bowls'], ['planter', 'Planters']];
+const CATS = [['all', 'All'], ['table', 'Table lamps'], ['pendant', 'Pendant shades'], ['shade', 'Shades for your lamp'], ['vase', 'Vases'], ['bowl', 'Bowls'], ['planter', 'Planters'], ['figure', 'Figures']];
 const catOf = (p, lamp) => lamp ? (p.lamp.layout === 'pendant' ? 'pendant' : p.lamp.own ? 'shade' : 'table') : p.cat || 'vase';
 const startEl = $('#start');
 function renderStart() {
@@ -2003,9 +2063,9 @@ function parseSTL(buf) {
 }
 function flipField(P) {
   const Fd = P.field, a = fieldArr(Fd), nt = Fd.nt, nv = Fd.nv, u = new Uint16Array(nt * nv);
-  for (let j = 0; j < nv; j++) for (let b = 0; b < nt; b++) u[j * nt + b] = Math.round(a[(nv - 1 - j) * nt + b] * 16384);
+  for (let j = 0; j < nv; j++) for (let b = 0; b < nt; b++) u[j * nt + b] = Math.round(a[(nv - 1 - j) * nt + b] * 8192);
   const by = new Uint8Array(u.buffer); let t = ''; for (let i = 0; i < by.length; i += 8192) t += String.fromCharCode.apply(null, by.subarray(i, i + 8192));
-  P.field = { ...Fd, d:btoa(t) }; P.prof = P.prof.slice().reverse();
+  P.field = { ...Fd, q:8192, d:btoa(t) }; P.prof = P.prof.slice().reverse();
 }
 async function importSTL(file) {
   await busy(async () => {
@@ -2143,7 +2203,7 @@ function renderPanel() {
     }
     sd.append(grid);
     if (state[dk].field) { // imported model
-      const Fd = state[dk].field, si = section('Imported model', Fd.name || 'Your STL', '', { open:true });
+      const Fd = state[dk].field, si = section(state.vpreset === 'import' ? 'Imported model' : 'Figure', Fd.name || 'Your STL', '', { open:true });
       slider(si, 'Detail', () => Fd.s ?? 1, v => Fd.s = v, 0, 1, .01, v => v >= .995 ? 'as modelled' : Math.round(v * 100) + '%', () => rebuild(dk));
       const row = el('div', { className:'chips' });
       const bf = el('button', { textContent:'Flip upside down' }); bf.onclick = () => { pushUndo(); flipField(state[dk]); rebuild(); frameCamera(); renderPanel(); };
