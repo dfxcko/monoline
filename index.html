@@ -287,6 +287,7 @@
 
 
 
+
 </div></div>
 <div id="start"><div class="in">
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
@@ -368,6 +369,12 @@ const VESSEL_PRESETS = {
     vessel:part(1, prof(v => .3), PLAIN(), pat('rings', .0025, 40, 90), '#8fb8e8', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.45, soft:.18 }) },
   pillow:{ studio:true, cat:'bag', bag:'pillow', filament:'tpu', name:'Pillow bag', note:'TPU tote · quilted pillows in staggered rows · cord handles',
     vessel:part(1, prof(v => .3), PLAIN(), PLAIN(), '#d6b25e') },
+  bronto_m:{ studio:true, cat:'figure', fig:'bronto', mini:48, name:'Mini Bronto', note:'5 cm desk dinosaur · smooth · closed',
+    vessel:part(1, prof(v => .3), PLAIN(), PLAIN(), '#9fc9a5') },
+  rex_m:{ studio:true, cat:'figure', fig:'rex', mini:46, name:'Mini Rex', note:'5 cm desk T-rex · smooth · closed',
+    vessel:part(1, prof(v => .3), PLAIN(), PLAIN(), '#ef7d5a') },
+  spino_m:{ studio:true, cat:'figure', fig:'spino', mini:50, name:'Mini Spino', note:'5 cm sail-back · smooth · closed',
+    vessel:part(1, prof(v => .3), PLAIN(), PLAIN(), '#8fb8e8') },
   quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
     vessel:part(1.0, prof(v => .46 + .14 * Math.pow(v, .8)), PLAIN(), pat('knurl', .003, 64, 30), '#7f8f7a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.55, soft:.12 }, { n:4, k:.75 }) },
 };
@@ -733,7 +740,8 @@ function bagField({ H, a0, a1, b0, b1, n = 4, amp = 4.5, cell = 34, row = 26, to
 }
 const BAGS = { pillow:{ H:240, a0:100, a1:108, b0:42, b1:50, amp:6.5, cell:40, row:32, top:30, bot:16 } };
 for (const p of Object.values(VESSEL_PRESETS)) if (p.bag) { const R = bagField(BAGS[p.bag]); Object.assign(p.vessel, { h:R.h, prof:R.prof, field:{ ...R.field, name:p.name } }); }
-for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) { const [H, fn] = FIGURES[p.fig], R = fieldFromFn(fn, H); Object.assign(p.vessel, { h:R.h, prof:R.prof, cap:true, field:{ ...R.field, name:p.name } }); }
+for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) { const [H0, fn0] = FIGURES[p.fig], sc = p.mini ? p.mini / H0 : 1, H = H0 * sc;   // minis: the same figure scaled down
+  const fn = sc === 1 ? fn0 : z => fn0(z / sc).map(([x, y, a, b]) => [x * sc, y * sc * 1.7, a * sc, b * sc * 1.7]), R = fieldFromFn(fn, H, 256, 161, 38, sc === 1 ? 7 : 3);   /* minis are chunkier sideways, so they don't turn into flat cut-outs */ Object.assign(p.vessel, { h:R.h, prof:R.prof, cap:true, field:{ ...R.field, name:p.name } }); }
 // Layer speeds you set yourself: [from, to, mm/s] in mm above the bed, per part
 function spdAt(k, z) { const L = state.print.spd?.[k]; if (L) for (const [a, b, v] of L) if (z >= a && z < b) return v; return 0; }
 // matching saucer: follows the pot's foot with a few mm to spare
@@ -1467,8 +1475,8 @@ function checks(k) {
   const w = lineW(pr.nozzle), lh = pr.layerH, H = P.h * MM, out = [];
   const add = (lvl, msg) => out.push({ lvl, msg });
   // size
-  let rMax = 0, rMin = Infinity;
-  for (let j = 0; j <= 40; j++) for (let i = 0; i < 96; i++) { const r = surfR(P, i / 96 * TAU, j / 40, m) * MM; rMax = Math.max(rMax, r); rMin = Math.min(rMin, r); }
+  let rMax = 0, rMin = Infinity;   // rMin: the smallest loop (mean radius at a height); a closed top's last few mm are sealed by rings instead
+  for (let j = 0; j <= 40; j++) { let mean = 0; for (let i = 0; i < 96; i++) { const r = surfR(P, i / 96 * TAU, j / 40, m) * MM; rMax = Math.max(rMax, r); mean += r / 96; } if (!(P.cap && k === 'vessel' && j >= 37)) rMin = Math.min(rMin, mean); }
   const D = rMax * 2, bed = Math.min(...printer.bed) - 10;
   if (D > bed || H > printer.maxZ) add('bad', `Too big for the ${printer.name}: ${D.toFixed(0)} × ${H.toFixed(0)} mm (fits ${bed} × ${printer.maxZ}).`);
   else add('ok', `Fits the ${printer.name}: Ø${D.toFixed(0)} × ${H.toFixed(0)} mm.`);
