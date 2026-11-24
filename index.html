@@ -286,6 +286,7 @@
 
 
 
+
 </div></div>
 <div id="start"><div class="in">
   <div class="top"><div style="flex:1"><h2>Monoline</h2><p class="lead">What do you want to make?</p></div><button id="startClose" class="txt" style="padding:8px 14px;font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase">Back to my design</button></div>
@@ -365,6 +366,8 @@ const VESSEL_PRESETS = {
     vessel:part(1, prof(v => .3), pat('knurl', .0022, 72, 60, .2), PLAIN(), '#ef7d5a') },
   spino:{ studio:true, cat:'figure', fig:'spino', name:'Spino', note:'Sail-back dinosaur · smooth body melting into coil',
     vessel:part(1, prof(v => .3), PLAIN(), pat('rings', .0025, 40, 90), '#8fb8e8', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.45, soft:.18 }) },
+  pillow:{ studio:true, cat:'bag', bag:'pillow', filament:'tpu', name:'Pillow bag', note:'TPU tote · quilted pillows in staggered rows · cord handles',
+    vessel:part(1, prof(v => .3), PLAIN(), PLAIN(), '#d6b25e') },
   quad:{ studio:true, cat:'planter', name:'Quad planter', note:'Soft square · knurled band · saucer', planter:{ on:true, hole:10 },
     vessel:part(1.0, prof(v => .46 + .14 * Math.pow(v, .8)), PLAIN(), pat('knurl', .003, 64, 30), '#7f8f7a', 0, 0, {}, {}, {}, { on:true, dir:'height', pos:.55, soft:.12 }, { n:4, k:.75 }) },
 };
@@ -382,7 +385,7 @@ function easeSlope(P, deg = 45) {
   for (let i = iMax + 1; i < N; i++) pr[i] = +Math.min(Math.max(pr[i], pr[i - 1] - maxD), pr[i - 1] + maxD).toFixed(4);
   for (let i = iMax - 1; i >= 0; i--) pr[i] = +Math.min(Math.max(pr[i], pr[i + 1] - maxD), pr[i + 1] + maxD).toFixed(4);
 }
-for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k] && !p.fig) easeSlope(p[k], 40);
+for (const p of [...Object.values(LAMP_PRESETS), ...Object.values(VESSEL_PRESETS)]) for (const k of ['shade', 'base', 'vessel']) if (p[k] && !p.fig && !p.bag) easeSlope(p[k], 40);
 
 const PRINTERS = {
   a1mini:{ name:'A1 mini', bed:[180,180], maxZ:180, zSpeed:10, park:[10,170], purgeY:4 },
@@ -397,6 +400,7 @@ const FILAMENTS = {
   matte:{ name:'PLA Matte', nozzle:220, bed:55, fan:100, flow:16, soft:55, rho:1.24 },
   silk:{ name:'Silk PLA', nozzle:225, bed:55, fan:100, flow:12, soft:55, rho:1.24 },
   petg:{ name:'PETG', nozzle:250, bed:70, fan:40, flow:12, soft:75, rho:1.27 },
+  tpu:{ name:'TPU 95A (flexible)', nozzle:230, bed:35, fan:70, flow:3.6, soft:60, rho:1.21, flex:true },
 };
 const NOZZLES = [.4, .6, .8];
 // Lamp hardware (mm). Socket "hole" = the shade opening that sits on the socket's shade ring.
@@ -705,6 +709,30 @@ const FIGURES = {
     [3, 0, 10 * up(z, 112, 120), 9 * up(z, 112, 120)],
     [10 + 22 * bump(z, 122, 185), 0, 10 + 22 * bump(z, 122, 185), 8 + 1.5 * bump(z, 122, 185)]]],
 };
+/* ── bags: a soft rectangle (superellipse) with a quilted pattern baked into the shape. The pillows are laid out by distance
+   along the wall, so they stay the same size on the flat faces and round the corners; seams sit on the wall, domes bulge out. ── */
+function bagField({ H, a0, a1, b0, b1, n = 4, amp = 4.5, cell = 34, row = 26, top = 30, bot = 8 }) {
+  const NT = 256, NV = 201, M = 1440, Fm = new Float32Array(NT * NV);
+  const am = (a0 + a1) / 2, bm = (b0 + b1) / 2, Nc = Math.max(4, Math.round(Math.PI * (am + bm) * 1.08 / cell));   // same pillow count all the way up
+  for (let j = 0; j < NV; j++) {
+    const z = j / (NV - 1) * H, v = z / H, a = a0 + (a1 - a0) * v, b = b0 + (b1 - b0) * v, P = [];
+    let S = 0, px = 0, py = 0;
+    for (let i = 0; i <= M; i++) { const t = i / M * TAU, c = Math.cos(t), sn = Math.sin(t), x = a * Math.sign(c) * Math.abs(c) ** (2 / n), y = b * Math.sign(sn) * Math.abs(sn) ** (2 / n);
+      if (i) S += Math.hypot(x - px, y - py); px = x; py = y;
+      let nx = Math.sign(x) * Math.abs(x / a) ** (n - 1) / a, ny = Math.sign(y) * Math.abs(y / b) ** (n - 1) / b; const l = Math.hypot(nx, ny) || 1; P.push([x, y, nx / l, ny / l, S]); }
+    const N = Nc, rz = z / row, odd = Math.floor(rz) & 1, fz = rz - Math.floor(rz);
+    const env = smooth(0, bot, z) * (1 - smooth(H - top - 18, H - top, z));   // smooth band at the rim (for the handles) and a calm foot
+    const pol = P.map(([x, y, nx, ny, s]) => { const u = s / S * N + (odd ? .5 : 0), fu = u - Math.floor(u), d = amp * env * Math.sin(Math.PI * fu) * Math.sin(Math.PI * fz), X = x + nx * d, Y = y + ny * d; return [Math.atan2(Y, X), Math.hypot(X, Y)]; });
+    pol.sort((p, q) => p[0] - q[0]);
+    const L = pol.length, ext = [[pol[L - 1][0] - TAU, pol[L - 1][1]], ...pol, [pol[0][0] + TAU, pol[0][1]]];   // wrap around
+    for (let bI = 0; bI < NT; bI++) { let th = bI / NT * TAU; if (th >= Math.PI) th -= TAU;
+      let lo = 0, hi = ext.length - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (ext[mid][0] <= th) lo = mid; else hi = mid; }
+      const p0 = ext[lo], p1 = ext[hi], f = p1[0] > p0[0] ? (th - p0[0]) / (p1[0] - p0[0]) : 0; Fm[j * NT + bI] = p0[1] + (p1[1] - p0[1]) * f; }
+  }
+  return fieldFromGrid(Fm, NT, NV, H);
+}
+const BAGS = { pillow:{ H:240, a0:100, a1:108, b0:42, b1:50, amp:6.5, cell:40, row:32, top:30, bot:16 } };
+for (const p of Object.values(VESSEL_PRESETS)) if (p.bag) { const R = bagField(BAGS[p.bag]); Object.assign(p.vessel, { h:R.h, prof:R.prof, field:{ ...R.field, name:p.name } }); }
 for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) { const [H, fn] = FIGURES[p.fig], R = fieldFromFn(fn, H); Object.assign(p.vessel, { h:R.h, prof:R.prof, cap:true, field:{ ...R.field, name:p.name } }); }
 // Layer speeds you set yourself: [from, to, mm/s] in mm above the bed, per part
 function spdAt(k, z) { const L = state.print.spd?.[k]; if (L) for (const [a, b, v] of L) if (z >= a && z < b) return v; return 0; }
@@ -1505,6 +1533,8 @@ function checks(k) {
   }
   if (state.mode === 'vessel' && state.planter.on) { const g = saucerGap(); add(g < 1 ? 'bad' : 'ok', g < 1 ? `The pot does not fit inside its saucer (${g.toFixed(1)} mm). Use “Match saucer to pot”.` : `The pot stands in its saucer with ${g.toFixed(0)} mm to spare all round.`); }
   if (k === 'vessel' && state.planter.hole > 0) add(pr.bottom < 1 ? 'warn' : 'ok', pr.bottom < 1 ? 'Drainage hole needs at least one solid bottom layer.' : `Drainage hole Ø${state.planter.hole} mm is left open in the bottom (G-code). In an STL, drill it afterwards.`);
+  if (FILAMENTS[pr.filament].flex) add('ok', `TPU: feed it from the external spool holder, not the AMS, and keep it dry. It prints at ≤ ${(FILAMENTS[pr.filament].flow / (w * lh)).toFixed(0)} mm/s here (its flow limit). A ${w} mm wall comes out soft and flexible; a 0.6 mm nozzle gives a firmer bag.`);
+  if (k === 'vessel' && VESSEL_PRESETS[state.vpreset]?.bag) add('ok', 'Handles: punch two pairs of Ø5 mm holes in the smooth band about 12 mm below the rim (a leather punch goes through TPU easily), thread a 5–6 mm cord through each pair and knot it inside.');
   if (k === 'vessel' && P.cap) {   // closed top: how wide is the hole the flat rings have to bridge?
     let d = 0; for (let i = 0; i < 64; i++) d = Math.max(d, surfR(P, i / 64 * TAU, 1, m) * MM * 2 - w); const isNet = isZW(P);
     add(isNet ? 'warn' : d > 32 ? 'bad' : d > 20 ? 'warn' : 'ok', isNet ? 'Closed top does not work with the up/down net; the top stays open.' : `Closed top: the last 3 layers bridge a Ø${d.toFixed(0)} mm opening with flat rings spiralling inward at 7 mm/s, fan full.` + (d > 20 ? ' Above ~20 mm the middle sags; narrow the top first.' : ''));
@@ -1853,13 +1883,14 @@ function markOrigin() { flushMasks(); origin = JSON.stringify(state); try { loca
 function applyPreset(mode, k) {
   pushUndo(); const lamp = mode === 'lamp', p = (lamp ? LAMP_PRESETS : VESSEL_PRESETS)[k]; state.mode = mode; state.print.spd = {}; SIM.sel = null;
   if (lamp) { state.preset = k; state.lamp = { ...state.lamp, own:false, ...p.lamp }; state.shade = clone(p.shade); state.base = clone(p.base); delete maskCache.shade; delete maskCache.base; fitToFitting(); }
-  else { state.vpreset = k; state.vessel = clone(p.vessel); state.planter = { ...PLANTER0(), ...(p.planter || {}) }; state.saucer = SAUCER0(p.vessel.color); delete maskCache.vessel; delete maskCache.saucer; if (state.planter.on) fitSaucer(); }
+  else { if (p.filament) state.print.filament = p.filament; else if (FILAMENTS[state.print.filament].flex) state.print.filament = 'pla';
+    state.vpreset = k; state.vessel = clone(p.vessel); state.planter = { ...PLANTER0(), ...(p.planter || {}) }; state.saucer = SAUCER0(p.vessel.color); delete maskCache.vessel; delete maskCache.saucer; if (state.planter.on) fitSaucer(); }
   ui.surf = parts()[0]; if (!TABS_FOR().includes(ui.tab)) ui.tab = 'shape';
   parts().forEach(kk => { if (state[kk].tr.on) applyTransition(kk); adaptToNozzle(kk); });
   markOrigin(); rebuild(); applyLook(); frameCamera(); renderAll();
 }
 // ── start screen ──
-const CATS = [['all', 'All'], ['table', 'Table lamps'], ['pendant', 'Pendant shades'], ['shade', 'Shades for your lamp'], ['vase', 'Vases'], ['bowl', 'Bowls'], ['planter', 'Planters'], ['figure', 'Figures']];
+const CATS = [['all', 'All'], ['table', 'Table lamps'], ['pendant', 'Pendant shades'], ['shade', 'Shades for your lamp'], ['vase', 'Vases'], ['bowl', 'Bowls'], ['planter', 'Planters'], ['figure', 'Figures'], ['bag', 'Bags']];
 const catOf = (p, lamp) => lamp ? (p.lamp.layout === 'pendant' ? 'pendant' : p.lamp.own ? 'shade' : 'table') : p.cat || 'vase';
 const startEl = $('#start');
 function renderStart() {
@@ -2229,7 +2260,7 @@ function renderPanel() {
     }
     sd.append(grid);
     if (state[dk].field) { // imported model
-      const Fd = state[dk].field, si = section(state.vpreset === 'import' ? 'Imported model' : 'Figure', Fd.name || 'Your STL', '', { open:true });
+      const Fd = state[dk].field, si = section(state.vpreset === 'import' ? 'Imported model' : VESSEL_PRESETS[state.vpreset]?.bag ? 'Bag' : 'Figure', Fd.name || 'Your STL', '', { open:true });
       slider(si, 'Detail', () => Fd.s ?? 1, v => Fd.s = v, 0, 1, .01, v => v >= .995 ? 'as modelled' : Math.round(v * 100) + '%', () => rebuild(dk));
       const row = el('div', { className:'chips' });
       const bf = el('button', { textContent:'Flip upside down' }); bf.onclick = () => { pushUndo(); flipField(state[dk]); rebuild(); frameCamera(); renderPanel(); };
