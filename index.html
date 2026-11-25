@@ -352,9 +352,9 @@ const VESSEL_PRESETS = {
     vessel:part(.8, prof(v => .5 + .26 * Math.sin(v * Math.PI / 2)), PLAIN(), PLAIN(), '#8fb8e8', 0, 0, {}, {}, { on:true, mode:'radial', amp:1.4, lobes:48, rings:1, bumps:2, width:1, stagger:true, rim:6 }) },
   terra:{ studio:true, cat:'planter', name:'Terra planter', note:'Coiled pot · saucer · drainage hole', planter:{ on:true, hole:10 },
     vessel:part(1.1, prof(v => .36 + .2 * Math.pow(v, .9)), pat('rings', .0035, 40, 36), PLAIN(), '#c96a3b') },
-  bronto:{ studio:true, cat:'figure', fig:'bronto', name:'Bronto', note:'Long-neck dinosaur · fine weave · E27 socket in its head', socket:{ hole:42, collar:52, depth:44 }, planter:{ on:false, hole:12 },
+  bronto:{ studio:true, cat:'figure', fig:'bronto', name:'Bronto', note:'Long-neck dinosaur · fine weave · E27 or E14 socket in its head', socket:{ e27:{ collar:52, depth:44 }, e14:{ collar:40, depth:38 } }, planter:{ on:false, hole:12 },
     vessel:part(1, prof(v => .3), pat('woven', .0022, 48, 60), PLAIN(), '#9fc9a5') },
-  bronto_lamp:{ studio:true, cat:'figure', fig:'bronto', size:300, name:'Bronto lamp', note:'30 cm lamp base · E27 socket in its head · cord through the floor', socket:{ hole:42, collar:58, depth:50 }, planter:{ on:false, hole:12 },
+  bronto_lamp:{ studio:true, cat:'figure', fig:'bronto', size:300, name:'Bronto lamp', note:'30 cm lamp base · E27 or E14 socket in its head · cord through the floor', socket:{ e27:{ collar:58, depth:50 }, e14:{ collar:46, depth:42 } }, planter:{ on:false, hole:12 },
     vessel:part(1, prof(v => .3), pat('woven', .0026, 64, 80), PLAIN(), '#9fc9a5') },
   rex:{ studio:true, cat:'figure', fig:'rex', name:'Rex', note:'T-rex · knurled scales · hollow, closed',
     vessel:part(1, prof(v => .3), pat('knurl', .0022, 72, 60, .2), PLAIN(), '#ef7d5a') },
@@ -752,12 +752,17 @@ function bagField({ H, a0, a1, b0, b1, n = 4, amp = 4.5, cell = 34, row = 26, to
 }
 const BAGS = { pillow:{ H:240, a0:100, a1:108, b0:42, b1:50, amp:6.5, cell:40, row:32, top:30, bot:16 } };
 for (const p of Object.values(VESSEL_PRESETS)) if (p.bag) { const R = bagField(BAGS[p.bag]); Object.assign(p.vessel, { h:R.h, prof:R.prof, field:{ ...R.field, name:p.name } }); }
-for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) { const [H0, fn0, deco] = FIGURES[p.fig], sc = p.mini ? p.mini / H0 : p.size ? p.size / H0 : 1, H = H0 * sc, sy = p.mini ? 1.7 : 1;   // minis: the same figure scaled down; lamps may be scaled up
-  const S = p.socket, Rc = S ? S.collar / 2 : 0;   // lamp: the head ends in a round collar that holds an E27 socket hanging inside
+// lamp sockets a figure's head can hold: hole for the threaded sleeve, and the socket body that hangs inside
+const SOCKETS = { e27:{ name:'E27', hole:42, body:40, thread:40 }, e14:{ name:'E14', hole:30, body:29, thread:28 } };
+function figField(p, fit) {   // a figure preset's shape; lamps end in a round collar sized for the chosen socket
+  const [H0, fn0, deco] = FIGURES[p.fig], sc = p.mini ? p.mini / H0 : p.size ? p.size / H0 : 1, H = H0 * sc, sy = p.mini ? 1.7 : 1;   // minis: the same figure scaled down (and chunkier sideways, so they don't turn into flat cut-outs); lamps may be scaled up
+  const S = p.socket?.[fit], Rc = S ? S.collar / 2 : 0;
   const fn1 = sc === 1 ? fn0 : z => fn0(z / sc).map(([x, y, a, b]) => [x * sc, y * sc * sy, a * sc, b * sc * sy]);
   const fn = S ? z => { const g = up(z, H - S.depth - 10, H - S.depth); return [...fn1(z), [0, 0, Rc * g, Rc * g]]; } : fn1;
   const R = fieldFromFn(fn, H, 256, sc > 1.2 ? 241 : 161, 38, p.mini ? 3 : 7, deco, !!p.open, Rc);
-  if (S) Object.assign(p.vessel, { capHole:S.hole, capL:5 });   /* minis are chunkier sideways, so they don't turn into flat cut-outs */ Object.assign(p.vessel, { h:R.h, prof:R.prof, cap:!p.open, field:{ ...R.field, name:p.name } }); }
+  return { h:R.h, prof:R.prof, cap:!p.open, field:{ ...R.field, name:p.name }, ...(S ? { capHole:SOCKETS[fit].hole, capL:5, sockFit:fit } : {}) };
+}
+for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) Object.assign(p.vessel, figField(p, 'e27'));
 // Layer speeds you set yourself: [from, to, mm/s] in mm above the bed, per part
 function spdAt(k, z) { const L = state.print.spd?.[k]; if (L) for (const [a, b, v] of L) if (z >= a && z < b) return v; return 0; }
 // matching saucer: follows the pot's foot with a few mm to spare
@@ -1571,8 +1576,8 @@ function checks(k) {
   if (k === 'vessel' && P.cap && P.capHole) {   // lamp top: a ring-shaped plate round the socket hole
     let d = Infinity, D = 0; for (let i = 0; i < 64; i++) { const r = surfR(P, i / 64 * TAU, 1, m) * MM; d = Math.min(d, r); D = Math.max(D, r); }
     const band = d - w / 2 - P.capHole / 2;
-    add(band < 2 ? 'bad' : band > 14 ? 'warn' : 'ok', band < 2 ? `The top is too narrow for a Ø${P.capHole} mm socket hole.` : `Lamp top: ${P.capL || 3} layers of flat rings from the wall in to a Ø${P.capHole} mm hole (${band.toFixed(0)} mm wide), for an E27 socket with a Ø40 threaded sleeve. The socket hangs inside, its shade ring screws down on top. LED bulbs only.`);
-    if (2 * d - 2 * w < 41.5) add('bad', 'The head is too narrow inside for the socket body (Ø40).');
+    add(band < 2 ? 'bad' : band > 14 ? 'warn' : 'ok', band < 2 ? `The top is too narrow for a Ø${P.capHole} mm socket hole.` : `Lamp top: ${P.capL || 3} layers of flat rings from the wall in to a Ø${P.capHole} mm hole (${band.toFixed(0)} mm wide), for an ${(SOCKETS[P.sockFit] || SOCKETS.e27).name} socket with a Ø${(SOCKETS[P.sockFit] || SOCKETS.e27).thread} threaded sleeve. The socket hangs inside, its shade ring screws down on top. LED bulbs only.`);
+    const SB = SOCKETS[P.sockFit] || SOCKETS.e27; if (2 * d - 2 * w < SB.body + 1.5) add('bad', `The head is too narrow inside for the socket body (Ø${SB.body}).`);
   } else
   if (k === 'vessel' && P.cap) {   // closed top: how wide is the hole the flat rings have to bridge?
     let d = 0; for (let i = 0; i < 64; i++) d = Math.max(d, surfR(P, i / 64 * TAU, 1, m) * MM * 2 - w); const isNet = isZW(P);
@@ -2306,6 +2311,12 @@ function renderPanel() {
       const Fd = state[dk].field, si = section(state.vpreset === 'import' ? 'Imported model' : VESSEL_PRESETS[state.vpreset]?.bag ? 'Bag' : 'Figure', Fd.name || 'Your STL', '', { open:true });
       slider(si, 'Detail', () => Fd.s ?? 1, v => Fd.s = v, 0, 1, .01, v => v >= .995 ? 'as modelled' : Math.round(v * 100) + '%', () => rebuild(dk));
       const row = el('div', { className:'chips' });
+      const PS = VESSEL_PRESETS[state.vpreset];
+      if (PS?.socket && state[dk].capHole) { const rs = el('div', { className:'chips' });   // which lamp socket the head is made for
+        for (const fit of Object.keys(PS.socket)) { const b = el('button', { textContent:SOCKETS[fit].name + ' socket' }); b.classList.toggle('on', (state[dk].sockFit || 'e27') === fit);
+          b.onclick = () => { if ((state[dk].sockFit || 'e27') === fit) return; pushUndo(); Object.assign(state[dk], figField(PS, fit)); delete maskCache[dk]; adaptToNozzle(dk); rebuild(); frameCamera(); renderAll(); };
+          rs.append(b); }
+        si.append(rs); }
       const bf = el('button', { textContent:'Flip upside down' }); bf.onclick = () => { pushUndo(); flipField(state[dk]); rebuild(); frameCamera(); renderPanel(); };
       const br = el('button', { textContent:'Replace…' }); br.onclick = () => $('#stlIn').click();
       const bx = el('button', { textContent:'Make it round' }); bx.onclick = () => { pushUndo(); delete state[dk].field; rebuild(); renderPanel(); toast('Kept the outline, dropped the imported detail'); };
