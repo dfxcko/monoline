@@ -420,7 +420,8 @@ const BULBS = {
 };
 const LAYOUTS = { bell:'Table lamp · shade clamps on the socket', pendant:'Pendant · shade hangs from the socket' };
 const ringH = F => (F.h - 18) / MM;   // height of the socket's shade ring above its foot (scene units)
-const PLATE_HOLE = 10.5;             // mm, hole in the base's top plate for an M10 threaded nipple
+const PLATE_HOLE = 10.5;             // mm, default hole in the base's top plate for an M10 threaded nipple
+const plateHole = () => state.base?.plateHole || PLATE_HOLE;   // you can make it bigger, e.g. to pass a socket or a thicker cord
 const PEND_Y = .55;
 const LAMP0 = () => ({ layout:'bell', own:false, fitting:'e27', bulb:'a60', watts:6, hw:true });
 for (const p of Object.values(LAMP_PRESETS)) { fitProf(p.shade, p.lamp.layout, p.lamp.fitting); easeSlope(p.shade, 40); }   // every lamp's opening fits its socket
@@ -754,13 +755,13 @@ const BAGS = { pillow:{ H:240, a0:100, a1:108, b0:42, b1:50, amp:6.5, cell:40, r
 for (const p of Object.values(VESSEL_PRESETS)) if (p.bag) { const R = bagField(BAGS[p.bag]); Object.assign(p.vessel, { h:R.h, prof:R.prof, field:{ ...R.field, name:p.name } }); }
 // lamp sockets a figure's head can hold: hole for the threaded sleeve, and the socket body that hangs inside
 const SOCKETS = { e27:{ name:'E27', hole:42, body:40, thread:40 }, e14:{ name:'E14', hole:30, body:29, thread:28 } };
-function figField(p, fit) {   // a figure preset's shape; lamps end in a round collar sized for the chosen socket
+function figField(p, fit, hole) {   // a figure preset's shape; lamps end in a round collar sized for the chosen socket
   const [H0, fn0, deco] = FIGURES[p.fig], sc = p.mini ? p.mini / H0 : p.size ? p.size / H0 : 1, H = H0 * sc, sy = p.mini ? 1.7 : 1;   // minis: the same figure scaled down (and chunkier sideways, so they don't turn into flat cut-outs); lamps may be scaled up
-  const S = p.socket?.[fit], Rc = S ? S.collar / 2 : 0;
+  const S = p.socket?.[fit], hl = hole || SOCKETS[fit]?.hole || 0, Rc = S ? Math.max(S.collar, hl + 10) / 2 : 0;   // a bigger hole widens the collar, keeping 5 mm of plate round it
   const fn1 = sc === 1 ? fn0 : z => fn0(z / sc).map(([x, y, a, b]) => [x * sc, y * sc * sy, a * sc, b * sc * sy]);
   const fn = S ? z => { const g = up(z, H - S.depth - 10, H - S.depth); return [...fn1(z), [0, 0, Rc * g, Rc * g]]; } : fn1;
   const R = fieldFromFn(fn, H, 256, sc > 1.2 ? 241 : 161, 38, p.mini ? 3 : 7, deco, !!p.open, Rc);
-  return { h:R.h, prof:R.prof, cap:!p.open, field:{ ...R.field, name:p.name }, ...(S ? { capHole:SOCKETS[fit].hole, capL:5, sockFit:fit } : {}) };
+  return { h:R.h, prof:R.prof, cap:!p.open, field:{ ...R.field, name:p.name }, ...(S ? { capHole:hl, capL:5, sockFit:fit } : {}) };
 }
 for (const p of Object.values(VESSEL_PRESETS)) if (p.fig) Object.assign(p.vessel, figField(p, 'e27'));
 // Layer speeds you set yourself: [from, to, mm/s] in mm above the bed, per part
@@ -1386,7 +1387,7 @@ function toolpath(k) {
       const off = ring * w * .96; let minR = Infinity; const pts = [];
       if (!ring) setSlant(zc);
       for (let s = 0; s <= segs; s++) { const th = s / segs * TAU, r = R(th, zc) - off * slant[s]; minR = Math.min(minR, r); pts.push([r * Math.cos(th), r * Math.sin(th)]); }
-      if (minR < (k === 'base' ? PLATE_HOLE / 2 + w * .5 : k === 'vessel' && state.planter.hole > 0 ? state.planter.hole / 2 + w * .5 : w * .55)) break;   // leave the nipple hole (base plate) or drainage hole (pot) open
+      if (minR < (k === 'base' ? plateHole() / 2 + w * .5 : k === 'vessel' && state.planter.hole > 0 ? state.planter.hole / 2 + w * .5 : w * .55)) break;   // leave the nipple hole (base plate) or drainage hole (pot) open
       pts.forEach((q, i) => push(q[0], q[1], z, first && i === 0 ? 1 : 0, feed));
       first = false; ring++;
     }
@@ -1577,14 +1578,16 @@ function checks(k) {
     let d = Infinity, D = 0; for (let i = 0; i < 64; i++) { const r = surfR(P, i / 64 * TAU, 1, m) * MM; d = Math.min(d, r); D = Math.max(D, r); }
     const band = d - w / 2 - P.capHole / 2;
     add(band < 2 ? 'bad' : band > 14 ? 'warn' : 'ok', band < 2 ? `The top is too narrow for a Ø${P.capHole} mm socket hole.` : `Lamp top: ${P.capL || 3} layers of flat rings from the wall in to a Ø${P.capHole} mm hole (${band.toFixed(0)} mm wide), for an ${(SOCKETS[P.sockFit] || SOCKETS.e27).name} socket with a Ø${(SOCKETS[P.sockFit] || SOCKETS.e27).thread} threaded sleeve. The socket hangs inside, its shade ring screws down on top. LED bulbs only.`);
-    const SB = SOCKETS[P.sockFit] || SOCKETS.e27; if (2 * d - 2 * w < SB.body + 1.5) add('bad', `The head is too narrow inside for the socket body (Ø${SB.body}).`);
+    const SB = SOCKETS[P.sockFit] || SOCKETS.e27; if (P.capHole < SB.thread + 1) add('warn', `A Ø${P.capHole} mm hole is smaller than the ${SB.name} socket's Ø${SB.thread} sleeve: it only works if you fix the socket another way (e.g. an M10 nipple).`); if (2 * d - 2 * w < SB.body + 1.5) add('bad', `The head is too narrow inside for the socket body (Ø${SB.body}).`);
   } else
   if (k === 'vessel' && P.cap) {   // closed top: how wide is the hole the flat rings have to bridge?
     let d = 0; for (let i = 0; i < 64; i++) d = Math.max(d, surfR(P, i / 64 * TAU, 1, m) * MM * 2 - w); const isNet = isZW(P);
     add(isNet ? 'warn' : d > 32 ? 'bad' : d > 20 ? 'warn' : 'ok', isNet ? 'Closed top does not work with the up/down net; the top stays open.' : `Closed top: the last 3 layers bridge a Ø${d.toFixed(0)} mm opening with flat rings spiralling inward at 7 mm/s, fan full.` + (d > 20 ? ' Above ~20 mm the middle sags; narrow the top first.' : ''));
   }
   if (sectOn(P)) add('ok', `Cross-section is not round: the line keeps its ${w} mm width and simply follows the outline. Sizes are measured across the widest points.`);
-  if (k === 'base') add('ok', `Base prints upside down: its solid top plate (with a Ø${PLATE_HOLE} mm hole for an M10 nipple) goes on the bed. The bottom stays open for the cord.`);
+  if (k === 'base') { let dt = Infinity; for (let i = 0; i < 64; i++) dt = Math.min(dt, surfR(P, i / 64 * TAU, 1, m) * MM * 2); const band = (dt - w * 2 - plateHole()) / 2;   // plate left round a bigger hole
+    if (plateHole() > PLATE_HOLE) add(band < 4 ? 'bad' : 'ok', band < 4 ? `The Ø${plateHole()} mm hole leaves only ${Math.max(0, band).toFixed(0)} mm of top plate (Ø${dt.toFixed(0)} top): keep at least 4 mm.` : `Ø${plateHole()} mm hole in the base top, ${band.toFixed(0)} mm of plate round it.`); }
+  if (k === 'base') add('ok', `Base prints upside down: its solid top plate (with a Ø${+plateHole().toFixed(1)} mm hole${plateHole() === PLATE_HOLE ? ' for an M10 nipple' : ''}) goes on the bed. The bottom stays open for the cord.`);
   return out;
 }
 const texName = t => ({ smooth:'Smooth', woven:'Woven', ribs:'Ribs', rings:'Coil', diamond:'Lattice', wave:'Wave', knurl:'Knurl' })[t] || t;
@@ -2316,7 +2319,9 @@ function renderPanel() {
         for (const fit of Object.keys(PS.socket)) { const b = el('button', { textContent:SOCKETS[fit].name + ' socket' }); b.classList.toggle('on', (state[dk].sockFit || 'e27') === fit);
           b.onclick = () => { if ((state[dk].sockFit || 'e27') === fit) return; pushUndo(); Object.assign(state[dk], figField(PS, fit)); delete maskCache[dk]; adaptToNozzle(dk); rebuild(); frameCamera(); renderAll(); };
           rs.append(b); }
-        si.append(rs); }
+        si.append(rs);
+        let hT = 0; slider(si, 'Socket hole', () => state[dk].capHole, v => { state[dk].capHole = v; }, 20, 70, .5, v => 'Ø' + v + ' mm' + (v === SOCKETS[state[dk].sockFit || 'e27'].hole ? ' · ' + SOCKETS[state[dk].sockFit || 'e27'].name : ''),
+          () => { clearTimeout(hT); hT = setTimeout(() => { Object.assign(state[dk], figField(PS, state[dk].sockFit || 'e27', state[dk].capHole)); delete maskCache[dk]; adaptToNozzle(dk); rebuild(); }, 200); }); }
       const bf = el('button', { textContent:'Flip upside down' }); bf.onclick = () => { pushUndo(); flipField(state[dk]); rebuild(); frameCamera(); renderPanel(); };
       const br = el('button', { textContent:'Replace…' }); br.onclick = () => $('#stlIn').click();
       const bx = el('button', { textContent:'Make it round' }); bx.onclick = () => { pushUndo(); delete state[dk].field; rebuild(); renderPanel(); toast('Kept the outline, dropped the imported detail'); };
@@ -2341,8 +2346,9 @@ function renderPanel() {
       const pl = state.planter, plOn = pl.on || pl.hole > 0;
       const sp = section('Planter', 'A matching saucer and a drainage hole turn a vessel into a plant pot.', '', { open:plOn, status:plOn ? 'on' : 'off', on:plOn });
       toggle(sp, 'Saucer', pl.on, v => { pl.on = v; pl.auto = true; if (v) { state.saucer.color = state.vessel.color; fitSaucer(); } if (!parts().includes(ui.surf)) ui.surf = 'vessel'; rebuild(); frameCamera(); });
-      toggle(sp, 'Drainage hole', pl.hole > 0, v => { pl.hole = v ? 10 : 0; rebuild(); });
-      if (pl.hole > 0) slider(sp, 'Hole size', () => pl.hole, v => pl.hole = v, 5, 25, 1, v => 'Ø' + v + ' mm', () => rebuild());
+      const holeName = state.vessel.capHole ? 'Cord hole in the floor' : 'Drainage hole';
+      toggle(sp, holeName, pl.hole > 0, v => { pl.hole = v ? (state.vessel.capHole ? 12 : 10) : 0; rebuild(); });
+      if (pl.hole > 0) slider(sp, 'Hole size', () => pl.hole, v => pl.hole = v, 5, 60, 1, v => 'Ø' + v + ' mm', () => rebuild());
       if (pl.on) {
         slider(sp, 'Saucer rim height', () => pl.rim, v => { pl.rim = v; pl.auto = true; }, 8, 35, 1, v => v + ' mm', () => rebuild());
         if (!pl.auto) { const b = el('button', { textContent:'Match saucer to pot', style:'margin-top:6px' }); b.onclick = () => { pushUndo(); pl.auto = true; rebuild(); renderPanel(); toast('Saucer matched to the pot'); }; sp.append(b); }
@@ -2485,6 +2491,7 @@ function renderLamp() {
   s2.append(el('div', { className:'sub', textContent:FITTINGS[L.fitting].note, style:'margin:4px 0 8px' }));
   if (L.layout !== 'dome') chips(s2, Object.entries(BULBS).filter(([, b]) => b.fit === L.fitting).map(([k, b]) => [k, `${b.name} · Ø${b.d}×${b.h}`]), L.bulb, k => { pushUndo(); L.bulb = k; re(); });
   slider(s2, 'LED power', () => L.watts, v => L.watts = v, 2, 15, 1, v => v + ' W', () => renderChecksOnly());
+  if (state.lamp.layout === 'bell' && !state.lamp.own) slider(s2, 'Hole in the base top', () => plateHole(), v => state.base.plateHole = v, 8, 45, .5, v => 'Ø' + v + ' mm' + (v === PLATE_HOLE ? ' · M10 nipple' : ''), () => rebuild()).addEventListener('change', () => renderPanel());   // let go: assembly notes follow the new size
   toggle(s2, 'Show socket & bulb', L.hw, v => { L.hw = v; drawHardware(); requestRender(); });
   if (L.layout !== 'dome') { const b = el('button', { textContent:`Fit shade opening to ${FITTINGS[L.fitting].name} (Ø${FITTINGS[L.fitting].hole})`, style:'margin-top:6px' }); b.onclick = () => { pushUndo(); makePrintable('shade'); fitToFitting(); rebuild(); renderPanel(); toast('Opening fitted to the shade ring'); }; s2.append(b); }
   const sa = section('Assembly', 'How the printed parts and the hardware go together.');
@@ -2495,7 +2502,7 @@ function renderLamp() {
        'Screw in an LED bulb.']
     : L.layout === 'bell'
     ? [`You need: an ${FITTINGS[L.fitting].name.replace(' socket', '')} lamp socket with an outer thread and shade ring, an M10×1 hollow threaded nipple (15–20 mm) with a nut, and a cord with plug and switch.`,
-       `Print the base upside down (the G-code does this). Its top plate has a Ø${PLATE_HOLE} mm hole.`,
+       `Print the base upside down (the G-code does this). Its top plate has a Ø${+plateHole().toFixed(1)} mm hole.`,
        'Push the nipple through the hole, tighten the nut from inside the base, and screw the socket onto the nipple with the cord running through it.',
        'Slip the shade’s bottom opening over the socket and clamp it with the shade ring.',
        'Lead the cord out under the base; file a small notch in the rim so the lamp stands flat.']
