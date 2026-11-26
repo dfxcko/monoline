@@ -70,6 +70,8 @@
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;margin-top:-6px;border-radius:50%;background:#fff;border:1px solid var(--ink)}
   input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#fff;border:1px solid var(--ink)}
   .chips{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0}
+  #soloNote{display:none;font:400 10.5px/1.7 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg);white-space:nowrap;pointer-events:none}
+  body.solo #soloNote{display:inline-block}
   .chips button{padding:5px 10px;font-size:12.5px}
   .presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .presets button{border-radius:3px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:3px}
@@ -237,7 +239,7 @@
   <button id="shareBtn" title="Share a link to this design"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M8 7l4-4 4 4M5 12v8h14v-8"/></svg></button>
   <button id="helpBtn" title="How it works" style="font:400 13px var(--mono);width:34px">?</button>
 </header>
-<div id="viewbar"><div class="seg" id="viewSeg"><button data-view="path">Path</button><button data-view="printed">Beads</button><button data-view="surface">Surface</button><button data-view="drawing">Drawing</button></div><div id="badge"></div><button id="status" title="Printability — tap for details"><span class="dot ok"></span><span id="statusTxt">Checking…</span></button></div>
+<div id="viewbar"><div class="seg" id="viewSeg"><button data-view="path">Path</button><button data-view="printed">Beads</button><button data-view="surface">Surface</button><button data-view="drawing">Drawing</button></div><div id="badge"></div><span id="soloNote">Base only · shade hidden while you edit it</span><button id="status" title="Printability — tap for details"><span class="dot ok"></span><span id="statusTxt">Checking…</span></button></div>
 <div id="hint">Drag on the lamp to sculpt · drag empty space to orbit</div>
 <div id="tools">
   <button data-tool="orbit" title="Orbit (O)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M3 12a9 4 0 0 0 18 0M12 3a4 9 0 0 1 0 18"/></svg><span class="lbl">Orbit</span></button>
@@ -454,6 +456,11 @@ try { hadSaved = !!localStorage.getItem('monoline.v1'); state = upgrade(JSON.par
 
 const ui = { fold:{}, cat:'all', started:false, tool:'grab', brush:.16, strength:.6, paintSize:22, tab:'shape', surf:state.mode === 'vessel' ? 'vessel' : 'shade' };
 const parts = () => state.mode === 'lamp' ? (state.lamp.layout === 'pendant' || state.lamp.own ? ['shade'] : ['shade', 'base']) : (state.planter.on ? ['vessel', 'saucer'] : ['vessel']);
+const baseSolo = () => state.mode === 'lamp' && parts().includes('base') && ui.surf === 'base' && (ui.tab === 'shape' || ui.tab === 'surface') && !SIM.on;   // editing the base: hide the shade, socket and bulb so every detail of the base shows
+function applyFocus() { const solo = baseSolo(); if (state.mode !== 'lamp') { document.body.classList.remove('solo'); ui.soloSeen = false; return; }
+  if (solo) { meshes.shade.visible = false; collarMesh.visible = false; hwGroup.visible = false; if (pathObjs.shade) pathObjs.shade.visible = false; }
+  else if (!SIM.on && document.body.classList.contains('solo')) { meshes.shade.visible = !(state.view === 'path' && isZW(state.shade)); collarMesh.visible = true; hwGroup.visible = true; if (pathObjs.shade) pathObjs.shade.visible = true; }   // undo only what solo hid
+  const was = document.body.classList.contains('solo'); document.body.classList.toggle('solo', solo); if (was !== solo && ui.soloSeen !== solo) { ui.soloSeen = solo; frameCamera(); } requestRender(); }   // reframe when the base goes solo or comes back
 const PART_NAMES = k => ({ shade:'Shade', base:'Base', vessel:state.planter.on ? 'Pot' : 'Vessel', saucer:'Saucer' })[k];
 
 /* ═════════════════════ undo / persistence ═════════════════════ */
@@ -854,7 +861,7 @@ function buildPart(k, geom, closed = false) {
   const P = state[k], y0 = closed ? 0 : partY0(k), m = getMask(k);
   const { rings, segs } = resFor(P);
   const capB = closed || k === 'vessel' || k === 'saucer', capT = closed || k === 'base' || (k === 'vessel' && !!P.cap);
-  const ann = capT && k === 'vessel' && !closed && P.capHole > 0, vCount = (rings + 1) * segs + (capB ? segs + 1 : 0) + (capT ? (ann ? 2 * segs : segs + 1) : 0);
+  const ann = capT && !closed && (k === 'base' || (k === 'vessel' && P.capHole > 0)), vCount = (rings + 1) * segs + (capB ? segs + 1 : 0) + (capT ? (ann ? 2 * segs : segs + 1) : 0);
   const triCount = rings * segs * 2 + (capB ? segs : 0) + (capT ? (ann ? 2 * segs : segs) : 0);
   let pos, glow, pm;
   if (!geom || geom.userData.vCount !== vCount) {
@@ -891,7 +898,7 @@ function buildPart(k, geom, closed = false) {
   }
   const ringCap = (v) => { const y = y0 + v * P.h; for (let i = 0; i < segs; i++) { const th = i / segs * TAU, r = surfR(P, th, v, m); pos[p++] = r * cosT[i]; pos[p++] = y + warpMM(P, k, th, v) / MM; pos[p++] = r * sinT[i]; glow[g] = 0; pm[g++] = 0; } pos[p++] = 0; pos[p++] = y; pos[p++] = 0; glow[g] = 0; pm[g++] = 0; };
   if (capB) ringCap(0);
-  if (capT && ann) { const y = y0 + P.h, hr = P.capHole / 2 / MM; for (let i = 0; i < segs; i++) { const th = i / segs * TAU, r = surfR(P, th, 1, m); pos[p++] = r * cosT[i]; pos[p++] = y + warpMM(P, k, th, 1) / MM; pos[p++] = r * sinT[i]; glow[g] = 0; pm[g++] = 0; } for (let i = 0; i < segs; i++) { pos[p++] = hr * cosT[i]; pos[p++] = y; pos[p++] = hr * sinT[i]; glow[g] = 0; pm[g++] = 0; } }
+  if (capT && ann) { const y = y0 + P.h, hr = (k === 'base' ? plateHole() : P.capHole) / 2 / MM; for (let i = 0; i < segs; i++) { const th = i / segs * TAU, r = surfR(P, th, 1, m); pos[p++] = r * cosT[i]; pos[p++] = y + warpMM(P, k, th, 1) / MM; pos[p++] = r * sinT[i]; glow[g] = 0; pm[g++] = 0; } for (let i = 0; i < segs; i++) { pos[p++] = hr * cosT[i]; pos[p++] = y; pos[p++] = hr * sinT[i]; glow[g] = 0; pm[g++] = 0; } }
   else if (capT) ringCap(1);
   geom.attributes.position.needsUpdate = geom.attributes.glow.needsUpdate = geom.attributes.pmask.needsUpdate = true;
   geom.computeVertexNormals(); geom.computeBoundingSphere();
@@ -1143,7 +1150,7 @@ function rebuild(which = 'all', keepPath = false) {
   drawHardware();
   if (state.view === 'drawing') scheduleDrawing();
   drawAttractors(); rebuildPaths(list); if (ui.tab === 'lamp') renderChecksOnly(); scheduleStatus();
-  updateBadge(); persist(); requestRender();
+  hwGroup.visible = !SIM.on; if (pathObjs.shade && !SIM.on) pathObjs.shade.visible = true; document.body.classList.remove('solo'); applyFocus(); updateBadge(); persist(); requestRender();
 }
 const attrGroup = new THREE.Group(); scene.add(attrGroup);
 const attrGeo = new THREE.SphereGeometry(.018, 16, 12), attrMat = new THREE.MeshBasicMaterial({ color:0x3d6bff, depthTest:false });
@@ -1191,8 +1198,9 @@ function applyLook() {
 function frameCamera() {
   // fit the whole object: centre on it and pull the camera back so height and width both fit
   let y0 = Infinity, y1 = 0, r = 0;
-  for (const k of parts()) { const P = state[k], a = partY0(k); y0 = Math.min(y0, a); y1 = Math.max(y1, a + P.h); r = Math.max(r, rMaxOf(P)); }
-  if (state.mode === 'lamp') { y0 = Math.min(y0, state.lamp.layout === 'pendant' ? PEND_Y : 0); y1 = Math.max(y1, lampTop()); }
+  const solo = baseSolo();   // base on its own: frame just the base
+  for (const k of solo ? ['base'] : parts()) { const P = state[k], a = partY0(k); y0 = Math.min(y0, a); y1 = Math.max(y1, a + P.h); r = Math.max(r, rMaxOf(P)); }
+  if (state.mode === 'lamp' && !solo) { y0 = Math.min(y0, state.lamp.layout === 'pendant' ? PEND_Y : 0); y1 = Math.max(y1, lampTop()); }
   const cy = (y0 + y1) / 2, fov = camera.fov * Math.PI / 180, W = stage.clientWidth, Hh = stage.clientHeight;
   const asp = innerWidth > 760 ? Math.max(.4, (W - 380) / (Hh - 150)) : W / (Hh * .62);
   const span = Math.max(y1 - y0 + r * .7, r * 2.15 / asp);
@@ -2085,6 +2093,7 @@ function simExit() {
   const lamp = state.mode === 'lamp';
   meshes.shade.visible = collarMesh.visible = lamp; meshes.base.visible = lamp && parts().includes('base'); meshes.vessel.visible = !lamp; meshes.saucer.visible = !lamp && state.planter.on;
   for (const k of parts()) if (state.view === 'path' && isZW(state[k])) meshes[k].visible = false;
+  document.body.classList.remove('solo'); applyFocus();
   dockPlayBtn(); frameCamera(); requestRender();
 }
 function simAt(time) {   // put the nozzle where it is at this moment and draw everything printed before it
@@ -2266,6 +2275,7 @@ function patternControls(s, k, T) {
   if (T.tex !== 'rings') slider(s, 'Twist', () => T.twist, v => T.twist = v, -1, 1, .01, v => Math.round(v * 360) + '°', rb);
 }
 function renderPanel() {
+  applyFocus();
   body.innerHTML = ''; onCommit = null;
   const lamp = state.mode === 'lamp';
   if (ui.tab === 'shape') {
